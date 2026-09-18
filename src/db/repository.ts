@@ -109,7 +109,22 @@ export function upsertBook(b: Omit<Book, 'id'> & { id?: string }): Book {
   return { ...b, id } as Book;
 }
 
+export function findBookByIsbn(isbn13: string): Book | null {
+  const r = getDb().getFirstSync<any>('SELECT * FROM books WHERE isbn13 = ?', [isbn13]);
+  return r ? toBook(r) : null;
+}
+
 // ---------- user library ----------
+/** A live wishlist copy of this exact book, if one exists (checkOwnership ignores wishlist rows). */
+export function findWishlistCopy(bookId: string): UserBook | null {
+  const r = getDb().getFirstSync<any>(
+    `SELECT * FROM user_books WHERE book_id = ? AND status IN ('wishlist', 'want_to_buy') AND deleted_at IS NULL
+      ORDER BY created_at LIMIT 1`,
+    [bookId]
+  );
+  return r ? toUserBook(r) : null;
+}
+
 export function addUserBook(bookId: string, status: BookStatus, location?: string): UserBook {
   const d = getDb();
   const id = newId();

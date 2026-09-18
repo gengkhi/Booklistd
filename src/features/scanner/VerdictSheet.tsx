@@ -24,15 +24,17 @@ const T_DEWEY = 800;
 const T_SAY = 1150;
 
 export function VerdictSheet({
-  result, rooms, quiet, onKeepScanning, onAdd,
+  result, rooms, quiet, wishlisted = false, onKeepScanning, onAdd,
 }: {
-  result: ScanResult; rooms: string[]; quiet: boolean;
+  result: ScanResult; rooms: string[]; quiet: boolean; wishlisted?: boolean;
   onKeepScanning: () => void; onAdd: (status: 'owned' | 'wishlist', room: string | null) => void;
 }) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const { verdict: v, meta, metaLoading, isbn13 } = result;
   const owned = v.owned;
+  // Catalog lookup failed for an unknown book: an error state, so Dewey stays out of it (spec §5).
+  const lookupFailed = !owned && !metaLoading && !meta && !v.book;
   const title = v.book?.title ?? meta?.title ?? `ISBN ${isbn13}`;
   const author = (v.book?.authors ?? meta?.authors ?? [])[0];
   const edition = [v.book?.publisher ?? meta?.publisher, v.book?.publishedYear ?? meta?.publishedYear].filter(Boolean).join(', ');
@@ -76,10 +78,12 @@ export function VerdictSheet({
         sheet,
       ]}
     >
-      <View style={{ position: 'absolute', right: 16, top: -56, zIndex: 11 }}>
-        <Dewey mood={owned ? 'smug' : 'gasp'} size={70} pop popDelay={T_DEWEY} />
-      </View>
-      {say && !quiet ? <Bubble text={line} width={176} style={{ position: 'absolute', right: 90, top: -66, zIndex: 11 }} /> : null}
+      {!lookupFailed ? (
+        <View style={{ position: 'absolute', right: 16, top: -56, zIndex: 11 }}>
+          <Dewey mood={owned ? 'smug' : 'gasp'} size={70} pop popDelay={T_DEWEY} />
+        </View>
+      ) : null}
+      {say && !quiet && !lookupFailed ? <Bubble text={line} width={176} style={{ position: 'absolute', right: 90, top: -66, zIndex: 11 }} /> : null}
 
       <Text accessibilityRole="header" style={{ fontFamily: font.display, fontSize: 40, lineHeight: 44, color: fg }}>
         {owned ? 'You own this!' : 'A new find!'}
@@ -102,7 +106,9 @@ export function VerdictSheet({
                   <ActivityIndicator color={ink.brown} />
                   <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft }}>Dewey is looking it up…</Text>
                 </View>
-              ) : !meta && !v.book ? (
+              ) : wishlisted ? (
+                <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>On your wishlist</Text>
+              ) : lookupFailed ? (
                 <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 4 }}>Couldn't reach the catalog. You can still add it by ISBN.</Text>
               ) : (
                 <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.grass, marginTop: 4 }}>Not on any shelf · not on your wishlist</Text>
@@ -136,7 +142,7 @@ export function VerdictSheet({
             {rooms.map((r) => <Chip key={r} label={r} selected={room === r} onPress={() => setRoom(r)} />)}
           </View>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            <Button variant="ghost" flex label="Wishlist it" onPress={() => onAdd('wishlist', null)} disabled={metaLoading} />
+            {!wishlisted ? <Button variant="ghost" flex label="Wishlist it" onPress={() => onAdd('wishlist', null)} disabled={metaLoading} /> : null}
             <Button flex label="Add to shelves" onPress={() => onAdd('owned', room)} disabled={metaLoading} />
           </View>
           <Pressable onPress={onKeepScanning} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>

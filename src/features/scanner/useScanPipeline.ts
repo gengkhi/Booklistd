@@ -22,6 +22,7 @@ export interface ScanResult {
 
 export function useScanPipeline() {
   const cooldown = useRef<Map<string, number>>(new Map());
+  const shown = useRef<string | null>(null); // isbn of the verdict on screen
   const [current, setCurrent] = useState<ScanResult | null>(null);
   const [sessionCount, setSessionCount] = useState(0);
 
@@ -39,6 +40,7 @@ export function useScanPipeline() {
       verdict.owned ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning
     );
     setSessionCount((n) => n + 1);
+    shown.current = isbn13;
     setCurrent({ isbn13, verdict, meta: null, metaLoading: !verdict.exactIsbnMatch });
 
     if (!verdict.exactIsbnMatch) {
@@ -57,6 +59,20 @@ export function useScanPipeline() {
     }
   }, []);
 
-  const dismiss = useCallback(() => setCurrent(null), []);
-  return { current, sessionCount, onBarcode, dismiss };
+  // Restart the cooldown for the dismissed book so it doesn't instantly re-verdict while still in frame.
+  const dismiss = useCallback(() => {
+    if (shown.current) cooldown.current.set(shown.current, Date.now());
+    shown.current = null;
+    setCurrent(null);
+  }, []);
+
+  /** Fresh Store Mode session: no verdict, count back to zero, cooldowns cleared. */
+  const reset = useCallback(() => {
+    cooldown.current.clear();
+    shown.current = null;
+    setCurrent(null);
+    setSessionCount(0);
+  }, []);
+
+  return { current, sessionCount, onBarcode, dismiss, reset };
 }

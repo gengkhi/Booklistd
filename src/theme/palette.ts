@@ -14,6 +14,7 @@ export const ink = {
   soft: '#6B5646', // secondary text on paper objects
   cream: '#F3E0BE',
   paper: '#FBFAF4',
+  sceneDark: '#1B130D', // Store Mode backdrop behind the camera
 } as const;
 
 export type Scheme = 'light' | 'lamp';
