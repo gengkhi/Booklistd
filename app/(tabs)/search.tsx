@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { addUserBook, searchLibrary, upsertBook } from '@/db/repository';
+import { addUserBook, checkOwnership, findWishlistCopy, searchLibrary, upsertBook } from '@/db/repository';
+import { invalidateLibrary } from '@/lib/invalidateLibrary';
 import { lookupIsbn } from '@/api/bookLookup';
 import { normalizeToIsbn13 } from '@/lib/isbn';
 import { searchAside } from '@/features/dewey/lines';
@@ -54,7 +55,16 @@ export default function SearchScreen() {
   const { data: catalog } = useQuery({ queryKey: ['isbn', isbn], queryFn: () => lookupIsbn(isbn!), enabled: !!isbn });
   const owned = mine.filter((r) => r.status !== 'wishlist' && r.status !== 'want_to_buy');
   const wished = mine.filter((r) => r.status === 'wishlist' || r.status === 'want_to_buy');
-  const ownedHit = owned.some((r) => r.book.isbn13 === isbn);
+  // "+ Add" only for books not already on a shelf or the wishlist (a wishlisted one shows in its own section).
+  const { data: gate } = useQuery({
+    queryKey: ['search', 'catalog-gate', isbn],
+    queryFn: () => {
+      const v = checkOwnership(isbn!);
+      return { owned: v.owned, wished: !!(v.book && findWishlistCopy(v.book.id)) };
+    },
+    enabled: !!isbn,
+  });
+  const canAdd = !!gate && !gate.owned && !gate.wished;
 
   const busyRef = useRef(false);
   useEffect(() => {
@@ -62,11 +72,11 @@ export default function SearchScreen() {
   }, [isbn]);
 
   const add = () => {
-    if (!catalog || busyRef.current) return;
+    if (!catalog || !canAdd || busyRef.current) return;
     busyRef.current = true;
     const book = upsertBook(catalog);
     addUserBook(book.id, 'owned');
-    qc.invalidateQueries();
+    invalidateLibrary(qc);
   };
 
   return (
@@ -88,7 +98,7 @@ export default function SearchScreen() {
             />
           </View>
         </Raised>
-        {!quiet ? <Text style={{ marginHorizontal: 20, marginTop: 10, fontFamily: font.hand, fontSize: 16, color: c.soft }}>{searchAside(term, owned.length)}</Text> : null}
+        {!quiet ? <Text style={{ marginHorizontal: 20, marginTop: 10, fontFamily: font.hand, fontSize: 16, color: c.soft }}>{searchAside(term.length >= 2 ? term : '', owned.length)}</Text> : null}
 
         {term.length >= 2 ? (
           <>
@@ -113,7 +123,7 @@ export default function SearchScreen() {
           </>
         ) : null}
 
-        {isbn && catalog && !ownedHit ? (
+        {isbn && catalog && canAdd ? (
           <>
             <Section label="From the catalog" count={1} />
             <ResultRow id={isbn} title={catalog.title} sub={[catalog.authors[0], catalog.publishedYear].filter(Boolean).join(' · ')}

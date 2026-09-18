@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listLibrary, setStatus } from '@/db/repository';
 import { wishlistLine } from '@/features/dewey/lines';
 import { wantedSince } from '@/lib/dates';
+import { invalidateLibrary } from '@/lib/invalidateLibrary';
 import { Bookcase } from '@/components/shelf/Bookcase';
 import { Shelf } from '@/components/shelf/Shelf';
 import { Spine } from '@/components/shelf/Spine';
@@ -26,7 +27,7 @@ export default function WishlistScreen() {
   const now = new Date();
   const found = (id: string) => {
     setStatus(id, 'owned');
-    qc.invalidateQueries();
+    invalidateLibrary(qc);
   };
 
   return (
