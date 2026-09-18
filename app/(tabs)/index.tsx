@@ -1,57 +1,94 @@
-import React from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { listLibrary, libraryStats } from '@/db/repository';
-import { BookCover } from '@/components/BookCover';
-import { colors, font, radius, shadow, space } from '@/theme/tokens';
+import { groupByRoom, mostCopied } from '@/features/shelves/groupByRoom';
+import { roomNote, shelvesLines } from '@/features/dewey/lines';
+import { greeting } from '@/lib/dates';
+import { Bookcase } from '@/components/shelf/Bookcase';
+import { Shelf } from '@/components/shelf/Shelf';
+import { Dewey } from '@/components/dewey/Dewey';
+import { Bubble } from '@/components/ui/Bubble';
+import { Button } from '@/components/ui/Button';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useSettings } from '@/stores/settings';
+import { useTheme } from '@/theme/useTheme';
+import { PLANKS, ink } from '@/theme/palette';
 
-export default function LibraryScreen() {
+const DEWEY_ROOM = 120; // horizontal space kept free for Dewey on his shelf
+
+export default function ShelvesScreen() {
+  const router = useRouter();
+  const { scheme, c } = useTheme();
+  const quiet = useSettings((s) => s.quiet);
+  const lamp = scheme === 'lamp';
   const { data: rows = [] } = useQuery({ queryKey: ['library'], queryFn: () => listLibrary() });
   const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: () => libraryStats() });
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ground }} edges={['top']}>
-      <View style={{ paddingHorizontal: space(4.5), paddingTop: space(2) }}>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 12.5, color: colors.muted }}>
-          Good evening, Sean
-        </Text>
-        <Text style={{ fontFamily: font.display, fontSize: 30, color: colors.ink }}>My Library</Text>
-        <Text style={{ fontFamily: font.body, fontSize: 12, color: colors.muted, marginTop: 2 }}>
-          {stats ? `${stats.totalBooks} books \u00B7 worth about $${stats.estValue.toFixed(0)}` : ' '}
-        </Text>
-      </View>
+  const rooms = useMemo(() => groupByRoom(rows), [rows]);
+  const lines = useMemo(
+    () => shelvesLines({
+      totalBooks: stats?.totalBooks ?? 0,
+      rooms: rooms.map((r) => ({ name: r.name, count: r.rows.length })),
+      mostCopied: mostCopied(rows),
+      loaned: stats?.activeLoans ?? 0,
+    }),
+    [rows, rooms, stats]
+  );
+  const [lineIdx, setLineIdx] = useState(0);
+  const line = lines[lineIdx % lines.length];
 
-      {rows.length === 0 ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: space(8) }}>
-          <Text style={{ fontFamily: font.displaySemi, fontSize: 20, color: colors.ink, textAlign: 'center' }}>
-            Your shelves are waiting
-          </Text>
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: 6 }}>
-            Scan your first book to start the collection.
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={rows}
-          keyExtractor={(r) => r.id}
-          numColumns={3}
-          contentContainerStyle={{ padding: space(4.5), gap: space(3.5) }}
-          columnWrapperStyle={{ gap: space(3.5) }}
-          renderItem={({ item }) => (
-            <Link href={{ pathname: '/book/[id]', params: { id: item.id } }} asChild>
-              <Pressable style={{ ...shadow.warm, borderRadius: radius.sm }}>
-                <BookCover
-                  title={item.book.title}
-                  author={item.book.authors[0]}
-                  coverUrl={item.book.coverUrl}
-                />
-              </Pressable>
-            </Link>
+  const total = stats?.totalBooks ?? 0;
+  const loans = stats?.activeLoans ?? 0;
+  const sub = total === 0
+    ? 'No books yet. The shelves are patient.'
+    : `${total} ${total === 1 ? 'book' : 'books'} on ${rooms.length} ${rooms.length === 1 ? 'shelf' : 'shelves'}${loans ? ` · ${loans} visiting friends` : ''}`;
+  const deweyShelf = Math.min(1, Math.max(0, rooms.length - 1));
+
+  const dewey = (
+    <>
+      <View style={{ position: 'absolute', right: 16, bottom: 18, zIndex: 5 }}>
+        <Dewey mood={lamp ? 'sleep' : 'happy'} onPress={quiet || lamp ? undefined : () => setLineIdx((i) => i + 1)} />
+      </View>
+      {!quiet && !lamp ? <Bubble text={line} width={140} style={{ position: 'absolute', right: 12, top: 30, zIndex: 6 }} /> : null}
+    </>
+  );
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }} edges={['top']}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
+        <ScreenHeader kicker={greeting(new Date(), lamp)} title="My Library" sub={sub} />
+        <Bookcase style={{ marginHorizontal: 12, marginTop: 14 }}>
+          {rooms.length === 0 ? (
+            <Shelf name="Reserved" count={0} plank={ink.bus} rows={[]} onPressBook={() => {}} reserveRight={DEWEY_ROOM}>
+              {dewey}
+            </Shelf>
+          ) : (
+            rooms.map((room, i) => (
+              <Shelf
+                key={room.name}
+                name={room.name}
+                count={room.rows.length}
+                note={quiet ? null : roomNote(room)}
+                plank={PLANKS[i % PLANKS.length]}
+                rows={room.rows}
+                withPlant={i === 0}
+                reserveRight={i === deweyShelf ? DEWEY_ROOM : 0}
+                onPressBook={(r) => router.push({ pathname: '/book/[id]', params: { id: r.id } })}
+              >
+                {i === deweyShelf ? dewey : null}
+              </Shelf>
+            ))
           )}
-        />
-      )}
+        </Bookcase>
+        {rooms.length === 0 ? (
+          <View style={{ marginHorizontal: 20, marginTop: 22 }}>
+            <Button label="Scan your first book" onPress={() => router.navigate('/scan')} />
+          </View>
+        ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }
