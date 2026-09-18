@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 import type { LibraryRow } from '@/lib/types';
 import { font, ink, radius } from '@/theme/palette';
 import { useTheme } from '@/theme/useTheme';
@@ -16,16 +16,20 @@ export function Shelf({
   const { c } = useTheme();
   return (
     <View style={{ position: 'relative' }} accessibilityLabel={`${name} shelf, ${count} books`}>
-      <ScrollView
+      {/* Virtualized: a room can hold hundreds of spines (spec §7). */}
+      <FlatList
         horizontal
+        data={rows}
+        keyExtractor={(r) => r.id}
+        initialNumToRender={12}
+        windowSize={5}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ alignItems: 'flex-end', gap: 2, paddingHorizontal: 14, paddingTop: 34, paddingRight: 14 + reserveRight, minHeight: 156 }}
-      >
-        {rows.map((r, i) => (
-          <Spine key={r.id} id={r.id} title={r.book.title} onPress={() => onPressBook(r)} lean={i === rows.length - 1 && rows.length >= 4 ? -10 : 0} />
-        ))}
-        {withPlant ? <View style={{ marginLeft: 10 }}><Plant /></View> : null}
-      </ScrollView>
+        renderItem={({ item: r, index: i }) => (
+          <Spine id={r.id} title={r.book.title} onPress={() => onPressBook(r)} lean={i === rows.length - 1 && rows.length >= 4 ? -10 : 0} />
+        )}
+        ListFooterComponent={withPlant ? <View style={{ marginLeft: 10 }}><Plant /></View> : null}
+      />
       <View style={{ height: 16, backgroundColor: plank, borderWidth: 2, borderColor: c.line, marginHorizontal: -2.5 }} />
       <View style={{ position: 'absolute', left: 12, top: 6, flexDirection: 'row', alignItems: 'center', gap: 10 }} pointerEvents="none">
         <View style={{ backgroundColor: c.roomTag, borderWidth: 2, borderColor: c.line, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
