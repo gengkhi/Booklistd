@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -30,7 +30,7 @@ function Section({ label, count }: { label: string; count: number }) {
 function ResultRow({ id, title, sub, right, onPress }: { id: string; title: string; sub: string; right: React.ReactNode; onPress?: () => void }) {
   const { c } = useTheme();
   return (
-    <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? 'button' : undefined}
+    <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? 'button' : undefined} accessibilityLabel={`${title}, ${sub}`}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginBottom: 10, backgroundColor: ink.white, borderWidth: 2, borderColor: c.line, borderRadius: 12, padding: 10, minHeight: 68 }}>
       <Spine id={id} title="" scale={0.45} />
       <View style={{ flex: 1 }}>
@@ -52,13 +52,22 @@ export default function SearchScreen() {
   const isbn = normalizeToIsbn13(term);
   const { data: mine = [] } = useQuery({ queryKey: ['search', term], queryFn: () => searchLibrary(term), enabled: term.length >= 2 });
   const { data: catalog } = useQuery({ queryKey: ['isbn', isbn], queryFn: () => lookupIsbn(isbn!), enabled: !!isbn });
-  const ownedHit = mine.some((r) => r.book.isbn13 === isbn);
+  const owned = mine.filter((r) => r.status !== 'wishlist' && r.status !== 'want_to_buy');
+  const wished = mine.filter((r) => r.status === 'wishlist' || r.status === 'want_to_buy');
+  const ownedHit = owned.some((r) => r.book.isbn13 === isbn);
+
+  const busyRef = useRef(false);
+  useEffect(() => {
+    busyRef.current = false;
+  }, [isbn]);
 
   const add = () => {
-    if (!catalog) return;
+    if (!catalog || busyRef.current) return;
+    busyRef.current = true;
     const book = upsertBook(catalog);
     addUserBook(book.id, 'owned');
     qc.invalidateQueries();
+    busyRef.current = false;
   };
 
   return (
@@ -80,17 +89,28 @@ export default function SearchScreen() {
             />
           </View>
         </Raised>
-        {!quiet ? <Text style={{ marginHorizontal: 20, marginTop: 10, fontFamily: font.hand, fontSize: 16, color: c.soft }}>{searchAside(term, mine.length)}</Text> : null}
+        {!quiet ? <Text style={{ marginHorizontal: 20, marginTop: 10, fontFamily: font.hand, fontSize: 16, color: c.soft }}>{searchAside(term, owned.length)}</Text> : null}
 
         {term.length >= 2 ? (
           <>
-            <Section label="On your shelves" count={mine.length} />
-            {mine.map((r) => (
+            <Section label="On your shelves" count={owned.length} />
+            {owned.map((r) => (
               <ResultRow key={r.id} id={r.id} title={r.book.title}
                 sub={[r.book.authors[0], r.book.publisher, r.book.publishedYear].filter(Boolean).join(' · ')}
                 right={<Text style={{ fontFamily: font.black, fontSize: 11.5, color: ink.brown }}>{r.location?.trim() || UNSHELVED}</Text>}
                 onPress={() => router.push({ pathname: '/book/[id]', params: { id: r.id } })} />
             ))}
+            {wished.length ? (
+              <>
+                <Section label="On your wishlist" count={wished.length} />
+                {wished.map((r) => (
+                  <ResultRow key={r.id} id={r.id} title={r.book.title}
+                    sub={[r.book.authors[0], r.book.publisher, r.book.publishedYear].filter(Boolean).join(' · ')}
+                    right={<Text style={{ fontFamily: font.black, fontSize: 11.5, color: ink.brown }}>Wishlist</Text>}
+                    onPress={() => router.push({ pathname: '/book/[id]', params: { id: r.id } })} />
+                ))}
+              </>
+            ) : null}
           </>
         ) : null}
 
