@@ -15,7 +15,7 @@ function Face({ mood }: { mood: DeweyMood }) {
     mood === 'sleep' ? (
       <Path d="M40 34h6M55 34h6" stroke={INK} strokeWidth={2.5} />
     ) : mood === 'smug' ? (
-      <Path d="M39 33h8M54 33h8" stroke={INK} strokeWidth={3} />
+      <Path d="M39 33h8M54 33h8" stroke={INK} strokeWidth={2.5} />
     ) : (
       <>
         <Circle cx={44} cy={34} r={2.2} fill={INK} />

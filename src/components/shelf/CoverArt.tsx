@@ -17,7 +17,14 @@ export function CoverArt({
   const look = spineStyle(id, title);
   return (
     <View style={[frame, { backgroundColor: look.bg, padding: width * 0.09 }]} accessibilityLabel={`Cover of ${title}`}>
-      <Svg style={{ position: 'absolute', left: 0, top: 0 }} width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <Svg
+        style={{ position: 'absolute', left: 0, top: 0 }}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         <Path d={`M0 ${height * 0.62} Q${width * 0.3} ${height * 0.5} ${width * 0.55} ${height * 0.6} T${width} ${height * 0.55} V${height} H0Z`} fill={look.accent} stroke={ink.brown} strokeWidth={2} />
         <Path d={`M0 ${height * 0.76} Q${width * 0.4} ${height * 0.68} ${width} ${height * 0.74} V${height} H0Z`} fill={look.bg === ink.tomato ? ink.pool : ink.tomato} stroke={ink.brown} strokeWidth={2} />
         <Circle cx={width * 0.74} cy={height * 0.32} r={width * 0.11} fill={ink.paper} stroke={ink.brown} strokeWidth={2} />

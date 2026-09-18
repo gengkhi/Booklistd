@@ -9,10 +9,16 @@ import { useTheme } from '@/theme/useTheme';
 
 function Dots({ color }: { color: string }) {
   return (
-    <Svg style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} width="100%" height="100%">
+    <Svg
+      style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}
+      width="100%"
+      height="100%"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Defs>
         <Pattern id="dots" width={5} height={5} patternUnits="userSpaceOnUse">
-          <Circle cx={2.5} cy={2.5} r={1.1} fill={color} opacity={0.55} />
+          <Circle cx={2.5} cy={2.5} r={0.9} fill={color} />
         </Pattern>
       </Defs>
       <Rect width="100%" height="100%" fill="url(#dots)" />
