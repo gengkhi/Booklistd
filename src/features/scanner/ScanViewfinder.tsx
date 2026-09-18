@@ -19,8 +19,13 @@ export function ScanViewfinder({ locked }: { locked: boolean }) {
   useEffect(() => {
     if (locked) {
       cancelAnimation(y);
-      y.value = withTiming(0.62, { duration: 120 });
-      squeeze.value = withSequence(withTiming(0.95, { duration: 120 }), withTiming(1, { duration: 160 }));
+      if (reduced) {
+        y.value = 0.62;
+        squeeze.value = 1;
+      } else {
+        y.value = withTiming(0.62, { duration: 120 });
+        squeeze.value = withSequence(withTiming(0.95, { duration: 120 }), withTiming(1, { duration: 160 }));
+      }
     } else if (!reduced) {
       y.value = 0;
       y.value = withRepeat(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }), -1, true);

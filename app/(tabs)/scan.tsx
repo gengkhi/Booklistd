@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -34,15 +34,29 @@ export default function ScanScreen() {
   const { current, sessionCount, onBarcode, dismiss } = useScanPipeline();
   const qc = useQueryClient();
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const busyRef = useRef(false);
   const rooms = useMemo(() => {
     const r = listRooms();
     return r.length ? r : DEFAULT_ROOMS;
   }, [current?.isbn13]); // refresh when a new book is scanned
 
+  // A new scan (or dismissal back to no current book) clears the double-tap guard.
+  useEffect(() => {
+    busyRef.current = false;
+  }, [current?.isbn13]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
+
   const close = () => router.navigate('/');
 
   const addAs = (status: 'owned' | 'wishlist', room: string | null) => {
-    if (!current) return;
+    if (!current || busyRef.current) return;
+    busyRef.current = true;
     const { verdict, meta, isbn13 } = current;
     const book =
       verdict.book ??
@@ -55,8 +69,9 @@ export default function ScanScreen() {
     qc.invalidateQueries({ queryKey: ['stats'] });
     const total = libraryStats().totalBooks;
     dismiss();
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(status === 'owned' ? `Shelved in ${room ?? 'Unshelved'}. Book #${total}.` : 'Wishlisted. The Someday shelf grows.');
-    setTimeout(() => setToast(null), 1800);
+    toastTimer.current = setTimeout(() => setToast(null), 1800);
   };
 
   if (!permission) return <View style={{ flex: 1, backgroundColor: SCENE }} />;
