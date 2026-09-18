@@ -10,6 +10,13 @@ interface SettingsState {
   setQuiet: (quiet: boolean) => void;
 }
 
+/**
+ * True once persisted settings have been read, whether that worked or not. zustand's
+ * hasHydrated/onFinishHydration never fire when storage rejects or the JSON is corrupt,
+ * so the splash gate listens to this instead.
+ */
+export const useSettingsReady = create<boolean>()(() => false);
+
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
@@ -18,6 +25,11 @@ export const useSettings = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setQuiet: (quiet) => set({ quiet }),
     }),
-    { name: 'settings', storage: createJSONStorage(() => AsyncStorage) }
+    {
+      name: 'settings',
+      storage: createJSONStorage(() => AsyncStorage),
+      // The returned callback runs after rehydration on success AND on error.
+      onRehydrateStorage: () => () => useSettingsReady.setState(true, true),
+    }
   )
 );

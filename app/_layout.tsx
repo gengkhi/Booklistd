@@ -8,10 +8,12 @@ import { Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900
 import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { getDb } from '@/db/database';
-import { useSettings } from '@/stores/settings';
+import { useSettingsReady } from '@/stores/settings';
 import { useTheme } from '@/theme/useTheme';
 
 SplashScreen.preventAutoHideAsync();
+
+const SETTINGS_WAIT_MS = 1500;
 
 export default function RootLayout() {
   const { scheme, c } = useTheme();
@@ -21,13 +23,15 @@ export default function RootLayout() {
     GochiHand_400Regular,
   });
 
-  // Wait for persisted settings too, so a Lamplight user never sees a Daylight flash.
-  const [hydrated, setHydrated] = useState(() => useSettings.persist.hasHydrated());
+  // Wait for persisted settings too, so a Lamplight user never sees a Daylight flash,
+  // but never block launch on them: storage errors still flip ready, and a timeout backs that up.
+  const settingsReady = useSettingsReady();
+  const [gaveUp, setGaveUp] = useState(false);
   useEffect(() => {
-    const unsub = useSettings.persist.onFinishHydration(() => setHydrated(true));
-    if (useSettings.persist.hasHydrated()) setHydrated(true);
-    return unsub;
+    const t = setTimeout(() => setGaveUp(true), SETTINGS_WAIT_MS);
+    return () => clearTimeout(t);
   }, []);
+  const hydrated = settingsReady || gaveUp;
 
   useEffect(() => {
     getDb(); // open + migrate on launch
