@@ -4,19 +4,23 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts, Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
+import { BagelFatOne_400Regular } from '@expo-google-fonts/bagel-fat-one';
+import { Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900Black } from '@expo-google-fonts/figtree';
+import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { getDb } from '@/db/database';
-import { colors } from '@/theme/tokens';
+import { useTheme } from '@/theme/useTheme';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { scheme, c } = useTheme();
   const [fontsLoaded] = useFonts({
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
+    Fraunces_600SemiBold, Fraunces_700Bold,
+    Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
+    BagelFatOne_400Regular,
+    Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900Black,
+    GochiHand_400Regular,
   });
 
   useEffect(() => {
@@ -31,13 +35,8 @@ export default function RootLayout() {
 
   return (
     <QueryProvider>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.ground },
-        }}
-      />
+      <StatusBar style={scheme === 'lamp' ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.paper } }} />
     </QueryProvider>
   );
 }
