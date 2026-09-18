@@ -19,7 +19,7 @@ Make My Library cozy, distinctive, usable and quietly funny. The library *is* a 
 | ink | #2B1D14 | #FFF4E0 (text) / #120B06 (lines) | text, every outline, hard shadows |
 | soft | #6B5646 | #D9C3A0 | secondary text |
 | tomato | #E2462B | same | stamps, pocket-card rule, verdict emphasis |
-| bus | #F4B41A | same | **primary action only** (Scan, Add, Keep scanning) + lamp light |
+| bus | #F4B41A | same | **primary action only** (Scan, Add, Keep scanning), plus the Scan action's own chrome in Store Mode (viewfinder, STORE MODE pill) and Lamplight's lamp light |
 | pool | #2F6FB0 | same | spines, planks |
 | grass | #3E9A5A | same | "You own this!" sheet, Dewey, read status |
 | plum | #7B3F6E | same | spines, wishlist stamps |
