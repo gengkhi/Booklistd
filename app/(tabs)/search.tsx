@@ -67,7 +67,6 @@ export default function SearchScreen() {
     const book = upsertBook(catalog);
     addUserBook(book.id, 'owned');
     qc.invalidateQueries();
-    busyRef.current = false;
   };
 
   return (
