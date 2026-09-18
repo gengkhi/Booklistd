@@ -34,7 +34,7 @@ Make My Library cozy, distinctive, usable and quietly funny. The library *is* a 
 **Grid:** 4pt spacing, 16–20px screen gutters, touch targets ≥44pt.
 
 **Signature components**
-- **Spine** — outlined rectangle, height/width/color/pattern (plain, band, dots) derived deterministically from the book id; vertical title (Figtree 900, 10.5). Optional lean. Tappable.
+- **Spine** — outlined rectangle, height/width/color/pattern (plain, band, dots) derived deterministically from the copy's id (`user_books.id`), so each copy has its own spine and the pulled cover on Book detail matches the tapped spine; vertical title (Figtree 900, 10.5). Optional lean. Tappable.
 - **Shelf** — row of spines standing on a colored plank; room tag pill (top-left) + optional tape note (Gochi Hand, rotated −2°).
 - **Bookcase** — outlined panel holding shelves; one prop per case (a potted plant at the end of the first shelf).
 - **Pocket card** — white card, tomato top rule, dotted-leader rows (replaces stat grids).
@@ -49,11 +49,12 @@ Make My Library cozy, distinctive, usable and quietly funny. The library *is* a 
 2. **Store Mode (`app/(tabs)/scan.tsx`)** — full-screen camera, yellow corner viewfinder, sweeping scan line, "STORE MODE · N SCANNED" pill, close button. Verdict sheet:
    - *Owned:* grass sheet, "You own this!", mini card (cover, title, author/edition, dotted rows: copies + per-room counts), ALREADY YOURS stamp, edition note ("Same edition you scanned" / "Different edition — you own N of this title"), primary "Keep scanning", link "Add copy #N+1 anyway".
    - *New find:* paper sheet, "A new find!", mini card + NEW! sticker, room chips ("Shelve it in"), ghost "Wishlist it" + primary "Add to shelves", loading state "Dewey is looking it up…".
+   - *Already wishlisted:* new-find layout with the status line "On your wishlist" and no "Wishlist it"; "Add to shelves" moves that wishlist copy to owned + the chosen room ("Moved off the Someday shelf. Shelved in {room}.").
    - Camera permission screen in the same world.
-3. **Book detail (`app/book/[id].tsx`)** — back/more buttons, mini shelf with a dashed "HERE" gap + tape note "Room — its spot", pulled cover (tilted, hard shadow), title/author, status chips, pocket card listing every copy (edition · room or "Visiting {name}"), ISBN row, loan callout when a copy is loaned, actions "Move shelf" / primary contextual.
+3. **Book detail (`app/book/[id].tsx`)** — back button, mini shelf with a dashed "HERE" gap + tape note "Room — its spot", pulled cover (tilted, hard shadow), title/author, status chips, pocket card listing every copy (edition · room or "Visiting {name}"), ISBN row, loan callout when a copy is loaned, actions "Move shelf" / primary contextual.
 4. **Search (`app/(tabs)/search.tsx`)** — outlined field with hard shadow, Gochi aside, sections "On your shelves · N" (local LIKE on title/author/isbn) then "From the catalog" — only when the query is a valid ISBN (existing `lookupIsbn`), with "+ Add". Free-text catalog search is out of scope (no API exists yet); the section is simply absent for non-ISBN queries.
 5. **Wishlist (`app/(tabs)/wishlist.tsx`)** — "27 books you'll "definitely" read", the Someday shelf (plum plank), Dewey, "Wanted the longest" slips with WANTED SINCE stamp and "Found it!" (moves to owned).
-6. **Profile (`app/(tabs)/profile.tsx`)** — restyled library card (pocket card), Lamplight toggle (System / Light / Lamplight), "Quiet librarian" toggle (Dewey stops talking).
+6. **Profile (`app/(tabs)/profile.tsx`)** — restyled library card (pocket card), Lamplight toggle (Match phone / Daylight / Lamplight), "Quiet librarian" toggle (Dewey stops talking).
 7. **Tab bar** — Shelves · Search · [Scan] · Wishlist · Profile; Scan is the raised yellow sticker button.
 
 ## 4. Motion
@@ -61,7 +62,7 @@ Make My Library cozy, distinctive, usable and quietly funny. The library *is* a 
 Library: Reanimated 4 (UI thread; press handling via Pressable), expo-haptics. Tokens: feedback 120ms, routine 220ms, overlay 450ms, focal 600ms; ease-out `(0.16,1,0.3,1)`; exits ~65% of entrances; no bounce except Dewey's pop and the sticker slap (named springs).
 
 - **Focal — verdict:** scan line roams → locks on read (viewfinder squeezes 0.95) → sheet springs up (450ms) → owned: stamp slams (scale 2.4→1, rotate −22°→−9°, 420ms) + card shake + heavy haptic; new: sticker slaps (380ms spring) → Dewey pops (520ms) → bubble in (260ms).
-- **Continuity:** tapping a spine lifts it (translateY −8) then pushes Book detail; the cover animates in from above ("pulled off the shelf"). Adding a book: in Store Mode the sheet slides away and a toast drops in ("Shelved in Living room. Book #413.").
+- **Continuity:** tapping a spine lifts it (translateY −8) then pushes Book detail; the cover animates in from above ("pulled off the shelf"). Adding a book: in Store Mode the sheet closes (no exit animation this build) and a toast drops in ("Shelved in Living room. Book #413.").
 - **Feedback:** buttons/chips sink into shadow (120ms); spines lift on press (the last spine on a full shelf leans); Dewey bubble swaps with a scale-in; tab switch is instant (native).
 - **Idle (rare):** Lamplight Dewey sleeps with a drifting "z".
 - **Reduced motion:** stamp/sticker appear without scale, no Dewey pop or shake, scan line static; verdict, color and haptics remain.
@@ -72,7 +73,7 @@ Library: Reanimated 4 (UI thread; press handling via Pressable), expo-haptics. T
 - Dry, adult, affectionate; roasts the *library*, never the user's taste or worth. No emoji.
 - Never speaks on errors, permission prompts, or destructive confirmations — those use plain librarian copy that names the problem and the fix.
 - One line per screen, max ~70 characters. Tap Dewey to rotate lines.
-- "Quiet librarian" setting hides bubbles and tape-note jokes (room tags stay).
+- "Quiet librarian" setting hides bubbles, tape-note jokes and quips in toasts, hints and share text (room tags stay).
 - Lines live in one module (`src/features/dewey/lines.ts`) as pure functions of a context object → unit-tested.
 
 ## 6. Architecture
@@ -80,12 +81,12 @@ Library: Reanimated 4 (UI thread; press handling via Pressable), expo-haptics. T
 - `src/theme/palette.ts` — `ink`, `palettes.light/lamp`, `font`, `radius`, `space`; `src/theme/motion.ts` — durations, easing, springs. Hard shadows are drawn by a `Raised` layer (Android elevation cannot do hard offsets).
 - `src/theme/useTheme.ts` — resolves System/Light/Lamplight (Zustand `useSettings`, persisted with AsyncStorage) via pure `resolveScheme()`.
 - `src/components/ui/` — `Button`, `Chip`, `PocketCard` (+ `LeaderRow`), `Stamp`, `Sticker`, `TapeNote`, `Bubble`, `ScreenHeader`.
-- `src/components/shelf/` — `Spine` (+ `spineStyle(bookId,title)` pure), `Shelf`, `Bookcase`, `Plant`, `CoverArt` (flat illustrated fallback when no coverUrl).
+- `src/components/shelf/` — `Spine` (+ `spineStyle(id,title)` pure), `Shelf`, `Bookcase`, `Plant`, `CoverArt` (flat illustrated fallback when no coverUrl).
 - `src/components/dewey/Dewey.tsx` — SVG, `mood` prop, optional pop animation.
-- `src/features/dewey/lines.ts` — pure line builders; `useDeweyLine(context)`.
+- `src/features/dewey/lines.ts` — pure line builders (screens call them directly).
 - `src/features/shelves/groupByRoom.ts` — pure grouping/sorting.
-- `src/features/scanner/VerdictSheet.tsx`, `ScanViewfinder.tsx` — Store Mode UI; `useScanPipeline` unchanged except exposing `lock` timing.
-- Repository additions: `searchLibrary(q)`, `listCopiesOfBook(bookId)` (with active loan borrower), `setStatus(userBookId, status)`, `listRooms()`.
+- `src/features/scanner/VerdictSheet.tsx`, `ScanViewfinder.tsx` — Store Mode UI; `useScanPipeline` keeps `checkOwnership` unchanged; it adds `reset()` (fresh session on focus) and restarts a book's cooldown when its verdict is dismissed.
+- Repository additions: `searchLibrary(q)`, `listCopiesOfBook(bookId)` (with active loan borrower), `setStatus(userBookId, status)`, `setLocation(userBookId, room)`, `listRooms()`, `findBookByIsbn(isbn13)`, `findWishlistCopy(bookId)`. Writes refresh screens via `src/lib/invalidateLibrary.ts`.
 - Dependencies: `react-native-svg`, `react-native-reanimated`, `react-native-worklets`, `@expo-google-fonts/bagel-fat-one`, `@expo-google-fonts/figtree`, `@expo-google-fonts/gochi-hand`; remove Fraunces/Nunito. Dev: `jest`, `jest-expo`, `@types/jest`. Theme lives in new files (`palette.ts`, `motion.ts`, `useTheme.ts`); the old `tokens.ts` and `BookCover` are deleted once every screen has moved over.
 
 ## 7. Error & edge states
@@ -105,4 +106,4 @@ Library: Reanimated 4 (UI thread; press handling via Pressable), expo-haptics. T
 
 ## 9. Out of scope (this build)
 
-Free-text catalog search, room management UI (create/rename/reorder rooms), drag-to-reshelve, lending flow UI beyond display + "Nudge", CSV import, sync changes, onboarding.
+Free-text catalog search, room management UI (create/rename/reorder rooms), drag-to-reshelve, lending flow UI beyond display + "Nudge", CSV import, sync changes (incl. enqueueing `upsertBook`), unifying `want_to_buy` with `wishlist`, onboarding.
