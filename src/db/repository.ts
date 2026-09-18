@@ -123,43 +123,94 @@ export function addUserBook(bookId: string, status: BookStatus, location?: strin
   return ub;
 }
 
+const LIBRARY_SELECT = `SELECT ub.*, b.id as b_id, b.isbn13, b.isbn10, b.title, b.subtitle, b.authors, b.publisher,
+       b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.description, b.work_key, b.source
+  FROM user_books ub JOIN books b ON b.id = ub.book_id`;
+
+const toRow = (r: any): LibraryRow => ({ ...toUserBook(r), book: toBook({ ...r, id: r.b_id }) });
+
 export function listLibrary(filter?: { status?: BookStatus }): LibraryRow[] {
-  const d = getDb();
   const where = ['ub.deleted_at IS NULL'];
   const params: any[] = [];
   if (filter?.status) {
     where.push('ub.status = ?');
     params.push(filter.status);
   }
-  const rows = d.getAllSync<any>(
-    `SELECT ub.*, b.id as b_id, b.isbn13, b.isbn10, b.title, b.subtitle, b.authors, b.publisher,
-            b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.description, b.work_key, b.source
-     FROM user_books ub JOIN books b ON b.id = ub.book_id
-     WHERE ${where.join(' AND ')}
-     ORDER BY ub.created_at DESC`,
-    params
-  );
-  return rows.map((r) => ({ ...toUserBook(r), book: toBook({ ...r, id: r.b_id }) }));
+  return getDb()
+    .getAllSync<any>(`${LIBRARY_SELECT} WHERE ${where.join(' AND ')} ORDER BY ub.created_at DESC`, params)
+    .map(toRow);
 }
 
 export function getLibraryRow(userBookId: string): LibraryRow | null {
+  const r = getDb().getFirstSync<any>(`${LIBRARY_SELECT} WHERE ub.id = ?`, [userBookId]);
+  return r ? toRow(r) : null;
+}
+
+/** Library-first search: title, authors (JSON text) or ISBN. */
+export function searchLibrary(q: string): LibraryRow[] {
+  const term = q.trim();
+  if (!term) return [];
+  const like = `%${term}%`;
+  return getDb()
+    .getAllSync<any>(
+      `${LIBRARY_SELECT} WHERE ub.deleted_at IS NULL AND (b.title LIKE ? OR b.authors LIKE ? OR b.isbn13 LIKE ?)
+       ORDER BY b.title COLLATE NOCASE LIMIT 50`,
+      [like, like, like]
+    )
+    .map(toRow);
+}
+
+export interface CopyRow extends UserBook {
+  borrower: string | null;
+  loanedAt: string | null;
+}
+
+/** Every owned copy of one book, with its active loan (if any). */
+export function listCopiesOfBook(bookId: string): CopyRow[] {
+  return getDb()
+    .getAllSync<any>(
+      `SELECT ub.*, l.borrower_name AS loan_borrower, l.loaned_at AS loan_at
+         FROM user_books ub
+         LEFT JOIN loans l ON l.user_book_id = ub.id AND l.returned_at IS NULL AND l.deleted_at IS NULL
+        WHERE ub.book_id = ? AND ub.deleted_at IS NULL AND ub.status != 'wishlist'
+        ORDER BY ub.created_at`,
+      [bookId]
+    )
+    .map((r) => ({ ...toUserBook(r), borrower: r.loan_borrower ?? null, loanedAt: r.loan_at ?? null }));
+}
+
+function updateUserBook(userBookId: string, column: 'status' | 'location', value: string | null) {
   const d = getDb();
-  const r = d.getFirstSync<any>(
-    `SELECT ub.*, b.id as b_id, b.isbn13, b.isbn10, b.title, b.subtitle, b.authors, b.publisher,
-            b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.description, b.work_key, b.source
-     FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE ub.id = ?`,
-    [userBookId]
-  );
-  return r ? { ...toUserBook(r), book: toBook({ ...r, id: r.b_id }) } : null;
+  d.runSync(`UPDATE user_books SET ${column} = ?, updated_at = datetime('now') WHERE id = ?`, [value, userBookId]);
+  const row = d.getFirstSync<any>('SELECT * FROM user_books WHERE id = ?', [userBookId]);
+  if (row) enqueue('user_books', userBookId, 'upsert', row);
+}
+
+export function setStatus(userBookId: string, status: BookStatus): void {
+  updateUserBook(userBookId, 'status', status);
+}
+
+export function setLocation(userBookId: string, location: string | null): void {
+  updateUserBook(userBookId, 'location', location?.trim() || null);
+}
+
+export function listRooms(): string[] {
+  return getDb()
+    .getAllSync<{ location: string }>(
+      `SELECT DISTINCT location FROM user_books
+        WHERE location IS NOT NULL AND TRIM(location) != '' AND deleted_at IS NULL
+        ORDER BY location COLLATE NOCASE`
+    )
+    .map((r) => r.location);
 }
 
 export function libraryStats() {
   const d = getDb();
-  const total = d.getFirstSync<{ n: number }>(
-    `SELECT COUNT(*) n FROM user_books WHERE deleted_at IS NULL AND status != 'wishlist'`
-  );
-  const value = d.getFirstSync<{ v: number }>(
-    `SELECT COALESCE(SUM(purchase_price), 0) v FROM user_books WHERE deleted_at IS NULL`
-  );
-  return { totalBooks: total?.n ?? 0, estValue: value?.v ?? 0 };
+  const one = (sql: string) => d.getFirstSync<{ n: number }>(sql)?.n ?? 0;
+  return {
+    totalBooks: one(`SELECT COUNT(*) n FROM user_books WHERE deleted_at IS NULL AND status != 'wishlist'`),
+    estValue: one(`SELECT COALESCE(SUM(purchase_price), 0) n FROM user_books WHERE deleted_at IS NULL`),
+    activeLoans: one(`SELECT COUNT(*) n FROM loans WHERE returned_at IS NULL AND deleted_at IS NULL`),
+    wishlist: one(`SELECT COUNT(*) n FROM user_books WHERE deleted_at IS NULL AND status = 'wishlist'`),
+  };
 }
