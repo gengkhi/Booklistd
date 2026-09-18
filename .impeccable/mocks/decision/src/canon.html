@@ -1,0 +1,40 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Category standard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:390px;height:844px;overflow:hidden;background:#fff;font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif;color:#111;position:relative}
+.status{height:47px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-weight:600;font-size:15px}
+.bar{display:flex;justify-content:flex-end;padding:4px 16px;color:#0A84FF;font-size:17px;gap:20px}
+h1{font-size:34px;font-weight:700;padding:2px 16px 0;letter-spacing:.2px}
+.search{margin:10px 16px;height:36px;border-radius:10px;background:#EFEFF4;color:#8E8E93;display:flex;align-items:center;padding:0 10px;font-size:16px}
+.seg{margin:4px 16px 12px;height:32px;border-radius:9px;background:#EFEFF4;display:flex;padding:2px}
+.seg div{flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;border-radius:7px}
+.seg .on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px;padding:0 16px}
+.c{aspect-ratio:2/3;border-radius:4px;display:flex;align-items:flex-end;padding:8px;color:#fff;font-weight:700;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.t{font-size:12px;font-weight:600;margin-top:5px}.a{font-size:11px;color:#8E8E93}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:84px;background:rgba(249,249,249,.96);border-top:.5px solid #ccc;display:flex;justify-content:space-around;padding-top:8px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:#8E8E93;width:60px}
+.tab.on{color:#0A84FF}
+</style></head><body>
+<div class="status"><span>9:41</span><span>●●● ▮</span></div>
+<div class="bar"><span>Sort</span><span>+</span></div>
+<h1>Library</h1>
+<div class="search">Search 412 books</div>
+<div class="seg"><div class="on">All</div><div>Reading</div><div>Loaned</div><div>Wishlist</div></div>
+<div class="grid">
+  <div><div class="c" style="background:#2F4B7C">DUNE</div><div class="t">Dune</div><div class="a">Frank Herbert</div></div>
+  <div><div class="c" style="background:#8C6D1F">PIRANESI</div><div class="t">Piranesi</div><div class="a">Susanna Clarke</div></div>
+  <div><div class="c" style="background:#6B2E2E">MIDDLEMARCH</div><div class="t">Middlemarch</div><div class="a">George Eliot</div></div>
+  <div><div class="c" style="background:#2E5E3E">STONER</div><div class="t">Stoner</div><div class="a">John Williams</div></div>
+  <div><div class="c" style="background:#44403C">THE HOBBIT</div><div class="t">The Hobbit</div><div class="a">J.R.R. Tolkien</div></div>
+  <div><div class="c" style="background:#1E3A5F">DUNE</div><div class="t">Dune</div><div class="a">Frank Herbert</div></div>
+</div>
+<div class="tabs">
+  <div class="tab on"><svg width="26" height="26" fill="#0A84FF"><rect x="5" y="4" width="7" height="18" rx="1"/><rect x="14" y="4" width="7" height="18" rx="1"/></svg>Library</div>
+  <div class="tab"><svg width="26" height="26" fill="none" stroke="#8E8E93" stroke-width="2"><circle cx="12" cy="12" r="6"/><path d="M17 17l4 4"/></svg>Search</div>
+  <div class="tab"><svg width="26" height="26" fill="none" stroke="#8E8E93" stroke-width="2"><path d="M4 8V4h4M18 4h4v4M22 18v4h-4M8 22H4v-4M7 13h12"/></svg>Scan</div>
+  <div class="tab"><svg width="26" height="26" fill="none" stroke="#8E8E93" stroke-width="2"><path d="M13 21s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/></svg>Wishlist</div>
+  <div class="tab"><svg width="26" height="26" fill="none" stroke="#8E8E93" stroke-width="2"><circle cx="13" cy="9" r="4"/><path d="M5 22c1-4 4-6 8-6s7 2 8 6"/></svg>Profile</div>
+</div>
+</body></html>

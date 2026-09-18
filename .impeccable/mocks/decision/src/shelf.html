@@ -1,0 +1,128 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Bookshelf</title>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@500;600;700;800;900&family=Gochi+Hand&display=block" rel="stylesheet">
+<style>
+:root{--paper:#FBFAF4;--ink:#2B1D14;--tomato:#E2462B;--bus:#F4B41A;--pool:#2F6FB0;--grass:#3E9A5A;--soft:#6B5646;--plum:#7B3F6E}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:390px;height:844px;overflow:hidden;font-family:Figtree,sans-serif;color:var(--ink);position:relative}
+.status{height:47px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-weight:700;font-size:15px}
+.head{padding:4px 20px 0;position:relative}
+.greet{font-weight:700;font-size:14px}
+h1{font-family:'Bagel Fat One';font-weight:400;font-size:40px;line-height:1.05;letter-spacing:-.5px}
+.sub{font-size:13px;font-weight:700;margin-top:2px}
+.case{position:relative}
+.shelf{position:relative}
+.row{display:flex;align-items:flex-end;height:132px;padding:0 14px;gap:2px;position:relative}
+.sp{border:2px solid var(--ink);border-radius:3px;position:relative;display:flex;align-items:center;justify-content:center;flex:none;transform-origin:bottom left}
+.sp span{writing-mode:vertical-rl;font-weight:900;font-size:10.5px;letter-spacing:.6px;white-space:nowrap;overflow:hidden;max-height:86%}
+.sp .band{position:absolute;left:0;right:0;height:6px;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+.sp.dots{background-image:radial-gradient(rgba(43,29,20,.55) 1px,transparent 1.3px);background-size:5px 5px}
+.stack{display:flex;flex-direction:column;align-items:center;flex:none;margin:0 4px}
+.stack .ly{border:2px solid var(--ink);border-radius:3px;height:18px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:-2px}
+.plank{height:16px;border:2px solid var(--ink);position:relative;z-index:2}
+.tag{position:absolute;z-index:3}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:86px;display:flex;justify-content:space-around;padding-top:10px;z-index:9}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;width:60px}
+.scan{width:62px;height:62px;border-radius:50%;background:var(--bus);border:2.5px solid var(--ink);margin-top:-30px;display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 0 var(--ink)}
+.bubble{position:absolute;background:#fff;border:2px solid var(--ink);border-radius:14px;padding:7px 10px;font-size:11.5px;font-weight:700;line-height:1.3;box-shadow:3px 3px 0 var(--ink);z-index:5;color:var(--ink)}
+
+/* ---------- A: painted bookcase ---------- */
+.A{background:var(--paper)}
+.A .greet,.A .sub{color:var(--soft)}
+.A .case{margin:14px 12px 0;border:2.5px solid var(--ink);border-radius:8px;background:#F3E9D2;padding-top:6px;box-shadow:4px 4px 0 var(--ink)}
+.A .plank{margin:0 -2.5px}
+.A .tag{left:12px;top:6px;font-size:11.5px;font-weight:800;background:#fff;border:2px solid var(--ink);border-radius:20px;padding:3px 10px}
+.A .tabs{background:#fff;border-top:2px solid var(--ink)}
+.A .tab{color:var(--soft)} .A .tab.on{color:var(--ink)}
+
+/* ---------- B: oak bookcase at dusk ---------- */
+.B{background:#3A2A1E;color:#F6E9D3}
+.B .greet,.B .sub{color:#D9C3A0}
+.B h1{color:#FFF4E0}
+.B .case{margin:14px 10px 0;border:3px solid var(--ink);border-radius:6px;background:#A2622F;padding:10px 10px 0;box-shadow:inset 0 0 0 3px #B8773F}
+.B .shelf{background:#2A1B12;border-left:2px solid var(--ink);border-right:2px solid var(--ink)}
+.B .shelf:first-child{border-top:2px solid var(--ink)}
+.B .row{background:radial-gradient(120% 90% at 50% 0%,rgba(244,180,26,.28),transparent 70%)}
+.B .plank{background:#C98545;margin:0 -2px}
+.B .tag{right:18px;bottom:1px;background:#E3B55B;border:1.5px solid var(--ink);border-radius:2px;padding:0 8px;line-height:12px;font-size:9.5px;font-weight:800;color:var(--ink)}
+.B .tabs{background:#2A1B12;border-top:2px solid var(--ink)}
+.B .tab{color:#BFA784} .B .tab.on{color:#FFF4E0}
+
+/* ---------- C: shelfie wall ---------- */
+.C{background:var(--tomato);color:#fff}
+.C .greet,.C .sub{color:#FFE3D9}
+.C h1{color:#fff;text-shadow:3px 3px 0 var(--ink)}
+.C .case{margin-top:4px}
+.C .sp span{max-height:66%;margin-bottom:18px}
+.C .shelf{margin-top:4px}
+.C .plank{background:#fff;margin:0 10px;border-radius:2px;box-shadow:0 5px 0 rgba(43,29,20,.35)}
+.C .sp .lab{position:absolute;bottom:6px;left:2px;right:2px;height:15px;background:#fff;border:1.5px solid var(--ink);font-size:6.5px;font-weight:900;color:var(--ink);display:flex;align-items:center;justify-content:center;writing-mode:horizontal-tb}
+.C .tag{left:14px;top:0;background:#F7E7B4;padding:2px 12px;font-family:'Gochi Hand';font-size:15px;color:var(--ink);transform:rotate(-2deg);box-shadow:1px 2px 0 rgba(43,29,20,.3)}
+.C .tabs{background:var(--paper);border-top:2px solid var(--ink)}
+.C .tab{color:var(--soft)} .C .tab.on{color:var(--ink)}
+</style></head><body>
+<div class="status"><span>9:41</span><span>●●● ▮</span></div>
+<div class="head">
+  <div class="greet">Good evening, Sean</div>
+  <h1>My Library</h1>
+  <div class="sub" id="sub"></div>
+</div>
+<div class="case" id="case"></div>
+<div class="tabs" id="tabs"></div>
+<script>
+const V=(new URLSearchParams(location.search).get('v')||'A').toUpperCase();
+document.body.className=V;
+const C={t:'#E2462B',b:'#F4B41A',p:'#2F6FB0',g:'#3E9A5A',w:'#FFFFFF',m:'#7B3F6E',k:'#2B1D14',c:'#F3E0BE'};
+const TX={t:'#fff',b:'#2B1D14',p:'#fff',g:'#fff',w:'#2B1D14',m:'#fff',k:'#F4B41A',c:'#2B1D14'};
+// [title, color, width, height, extra]
+const shelves=[
+ {tag:{A:'Living room · 146',B:'LIVING ROOM · 146',C:'Living room: the respectable ones'},plank:'b',
+  books:[['DUNE','p',30,112],['PIRANESI','b',26,120,{band:1}],['MIDDLEMARCH','t',34,104],['','g',18,116,{dots:1}],['THE HOBBIT','w',28,108,{band:1}],['','m',16,96],
+         {stack:[['EMMA','c',70],['BELOVED','g',78],['STONER','t',64]]},['THE WAVES','k',24,114,{lean:-12}]]},
+ {tag:{A:'Bedroom · 88',B:'BEDROOM · 88',C:'Bedroom: 3× Dune, no regrets'},plank:'t',dewey:1,
+  books:[['STONER','g',28,110],['DUNE','w',30,116,{band:1}],['DUNE','p',30,118],['DUNE','b',30,112,{band:1}],['','t',16,98,{dots:1}],['JANE EYRE','m',26,106,{lean:-10}]]},
+ {tag:{A:'Study · 94',B:'STUDY · 94',C:'Study: bought with good intentions'},plank:'p',
+  books:[['ULYSSES','k',36,120,{band:1}],['','b',18,100,{dots:1}],['WAR & PEACE','t',40,122],['SAPIENS','w',28,106],['','g',16,92],['BLEAK HOUSE','c',30,112,{band:1}],['ORLANDO','p',24,104]]}
+];
+const subs={A:'412 books on 3 shelves · 3 visiting friends',B:'412 books · lamp on · 3 visiting friends',C:'412 books · 27 on the wishlist'};
+document.getElementById('sub').textContent=subs[V];
+const cs=document.getElementById('case');
+shelves.forEach((s,i)=>{
+  const sh=document.createElement('div');sh.className='shelf';
+  const row=document.createElement('div');row.className='row';
+  row.style.paddingTop='26px';row.style.height=V==='C'?'146px':'150px';
+  s.books.forEach(b=>{
+    if(b.stack){const st=document.createElement('div');st.className='stack';
+      b.stack.forEach(([t,c,w])=>{const l=document.createElement('div');l.className='ly';l.style.width=w+'px';l.style.background=C[c];l.style.color=TX[c];l.textContent=t;st.appendChild(l)});
+      // tiny plant on the stack
+      st.insertAdjacentHTML('afterbegin','<svg width="34" height="34" viewBox="0 0 34 34" stroke="#2B1D14" stroke-width="2"><path d="M9 22h16l-2 11H11z" fill="#E2462B"/><path d="M17 22c0-8-6-12-10-12 0 6 4 10 10 12zM17 22c0-10 6-15 11-15 0 7-5 13-11 15z" fill="#3E9A5A"/></svg>');
+      row.appendChild(st);return;}
+    const [t,c,w,h,x={}]=b;const d=document.createElement('div');d.className='sp'+(x.dots?' dots':'');
+    d.style.width=w+'px';d.style.height=h+'px';d.style.backgroundColor=C[c];d.style.color=TX[c];
+    if(x.lean){d.style.transform=`rotate(${-x.lean}deg)`;d.style.marginLeft='10px';d.style.transformOrigin='bottom right'}
+    if(t)d.innerHTML=`<span>${t}</span>`;
+    if(x.band){d.insertAdjacentHTML('beforeend',`<div class="band" style="top:12px;background:${c==='b'?'#E2462B':'#F4B41A'}"></div>`)}
+    if(V==='C'&&t)d.insertAdjacentHTML('beforeend',`<div class="lab">${(t.slice(0,3))}</div>`);
+    row.appendChild(d);
+  });
+  sh.appendChild(row);
+  const pl=document.createElement('div');pl.className='plank';if(V==='A')pl.style.background=C[s.plank];sh.appendChild(pl);
+  const tg=document.createElement('div');tg.className='tag';tg.textContent=s.tag[V];sh.appendChild(tg);
+  if(s.dewey){
+    const dw=`<svg style="position:absolute;right:${V==='C'?22:18}px;bottom:16px;z-index:4" width="64" height="62" viewBox="0 0 74 70"><g stroke="#2B1D14" stroke-width="2.5" fill="#3E9A5A"><circle cx="20" cy="56" r="11"/><circle cx="34" cy="50" r="12"/><circle cx="50" cy="36" r="17" fill="#6BBF7A"/></g><g stroke="#2B1D14" stroke-width="2.5" fill="#fff"><circle cx="43" cy="33" r="6.5"/><circle cx="58" cy="33" r="6.5"/></g><path d="M49.5 33h2" stroke="#2B1D14" stroke-width="2.5"/>${V==='B'?'<path d="M40 34h6M55 34h6" stroke="#2B1D14" stroke-width="2.5"/>':'<circle cx="44" cy="34" r="2.2" fill="#2B1D14"/><circle cx="59" cy="34" r="2.2" fill="#2B1D14"/>'}<path d="M46 45q5 3 10 0" stroke="#2B1D14" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M47 19q-2-8 4-11" stroke="#2B1D14" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+    sh.insertAdjacentHTML('beforeend',dw);
+    const line={A:'Three copies of Dune. I\'m not judging. <b style="color:#E2462B">(I am.)</b>',B:'<b>zzz</b>… wake me when you buy a fourth Dune.',C:'Three Dunes. Bold. Consistent. Concerning.'}[V];
+    sh.insertAdjacentHTML('beforeend',`<div class="bubble" style="right:12px;top:${V==='C'?30:24}px;width:136px">${line}</div>`);
+  }
+  cs.appendChild(sh);
+});
+// tabs
+const on={A:'#2B1D14',B:'#FFF4E0',C:'#2B1D14'}[V],off={A:'#6B5646',B:'#BFA784',C:'#6B5646'}[V];
+document.getElementById('tabs').innerHTML=`
+<div class="tab on" style="color:${on}"><svg width="24" height="24" fill="none" stroke="${on}" stroke-width="2.2"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 6l3.5-1 3 14.5-3.5 1z"/></svg>Shelves</div>
+<div class="tab" style="color:${off}"><svg width="24" height="24" fill="none" stroke="${off}" stroke-width="2.2"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>Search</div>
+<div class="tab"><div class="scan"><svg width="28" height="28" fill="none" stroke="#2B1D14" stroke-width="2.6"><path d="M5 9V5h4M19 5h4v4M23 19v4h-4M9 23H5v-4M8 14h12"/></svg></div></div>
+<div class="tab" style="color:${off}"><svg width="24" height="24" fill="none" stroke="${off}" stroke-width="2.2"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/></svg>Wishlist</div>
+<div class="tab" style="color:${off}"><svg width="24" height="24" fill="none" stroke="${off}" stroke-width="2.2"><circle cx="12" cy="9" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profile</div>`;
+</script>
+</body></html>

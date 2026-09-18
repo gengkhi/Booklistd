@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "My Library",
+    "slug": "my-library",
+    "version": "0.1.0",
+    "scheme": "mylibrary",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.sean.mylibrary",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "My Library uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
+      }
+    },
+    "android": {
+      "package": "com.sean.mylibrary",
+      "permissions": ["CAMERA"],
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "My Library uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
+        }
+      ]
+    ],
+    "experiments": { "typedRoutes": true }
+  }
+}

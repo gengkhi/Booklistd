@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Book detail</title>
+<link rel="stylesheet" href="shared.css"><script src="shared.js"></script>
+<style>
+.top{display:flex;justify-content:space-between;padding:4px 16px 0}
+.iconbtn{width:44px;height:44px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--ink)}
+.mini-shelf{margin:8px 16px 0;position:relative}
+.mini-shelf .row{height:74px;padding:0 8px;justify-content:center}
+.gap{width:32px;height:62px;border:2px dashed var(--ink);border-radius:3px;display:flex;align-items:flex-end;justify-content:center;font-size:8px;font-weight:900;padding-bottom:3px;flex:none;background:repeating-linear-gradient(0deg,transparent 0 6px,rgba(43,29,20,.08) 6px 7px)}
+.hero{display:flex;gap:18px;padding:22px 20px 0;align-items:flex-end}
+.pulled{transform:rotate(-4deg);box-shadow:5px 5px 0 var(--ink);border-radius:6px;animation:pull 620ms var(--ease-out) both}
+@keyframes pull{from{transform:translateY(-120px) rotate(0deg) scale(.4);opacity:0}to{transform:rotate(-4deg);opacity:1}}
+h1{font-size:40px}
+.by{font-weight:800;font-size:14px;margin-top:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.card{margin:22px 16px 0;background:#fff;border:2.5px solid var(--ink);border-radius:8px;padding:12px 14px 8px;position:relative;box-shadow:3px 3px 0 var(--ink)}
+.card:before{content:"";position:absolute;left:0;right:0;top:0;height:9px;background:var(--tomato);border-bottom:2px solid var(--ink);border-radius:5px 5px 0 0}
+.card h3{font-size:11px;font-weight:900;letter-spacing:.4px;margin-top:6px;color:var(--soft)}
+.r{display:flex;gap:6px;align-items:baseline;font-size:14px;font-weight:700;padding:5px 0}
+.r i{flex:1;border-bottom:2px dotted #C9BBAA;transform:translateY(-4px)}
+.r b{font-weight:900}
+.loan{margin:14px 16px 0;display:flex;gap:10px;align-items:center;background:var(--tape);border:2px solid var(--ink);border-radius:10px;padding:10px 12px;font-weight:800;font-size:13px}
+.actions{display:flex;gap:10px;margin:16px 16px 0}
+.actions .btn{flex:1;height:48px;font-size:14px}
+.note{position:absolute;right:14px;top:258px;width:150px}
+</style></head>
+<body>
+<script>
+document.write(status());
+document.write(`<div class="top"><div class="iconbtn"><svg width="20" height="20" fill="none" stroke="#2B1D14" stroke-width="2.8"><path d="M13 4l-7 6 7 6"/></svg></div>
+<div class="iconbtn"><svg width="20" height="20" fill="none" stroke="#2B1D14" stroke-width="2.6"><circle cx="4" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/></svg></div></div>`);
+document.write(`<div class="mini-shelf"><div class="row">${[['','g',16,60],['STONER','g',20,66],['','w',18,62,{band:1}]].map(spine).join('')}<div class="gap">HERE</div>${[['','b',20,60,{band:1}],['','t',12,56,{dots:1}],['','m',18,62]].map(spine).join('')}</div>
+<div class="plank" style="background:var(--tomato);margin:0;height:12px"></div>
+<div class="tapenote" style="left:4px;top:-8px;font-size:12.5px">Bedroom, 2nd shelf — its spot</div></div>`);
+document.write(`<div class="hero"><div class="pulled">${cover({title:'Dune',author:'Frank Herbert',c:'p',w:132,h:196})}</div>
+<div style="flex:1;padding-bottom:6px"><h1 class="display">Dune</h1><div class="by soft">Frank Herbert</div>
+<div class="chips"><span class="chip" style="background:var(--grass);color:#fff">Read · twice</span><span class="chip">★ 5</span></div></div></div>`);
+document.write(`<div class="card"><h3>POCKET CARD · 3 COPIES</h3>
+<div class="r">Copy 1 · Ace, 1990<i></i><b>Living room</b></div>
+<div class="r">Copy 2 · Chilton, 1965<i></i><b>Bedroom</b></div>
+<div class="r">Copy 3 · Penguin, 2015<i></i><b>Visiting Maya</b></div>
+<div class="r">ISBN<i></i><b>978-0441172719</b></div></div>`);
+document.write(`<div class="loan">${dewey('happy',38)}<div>Copy 3 has been visiting Maya for 19 days. A gentle nudge?</div></div>`);
+document.write(`<div class="actions"><div class="btn ghost">Move shelf</div><div class="btn primary">Nudge Maya</div></div>`);
+</script>
+</body></html>

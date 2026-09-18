@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Card Catalog</title>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Figtree:wght@500;600;700;800&display=block" rel="stylesheet">
+<style>
+:root{--stock:#F4EEDD;--oak:#7A4A26;--oakD:#5A341A;--red:#C8373B;--blue:#6C8FC7;--brass:#B8913A;--ink:#1F1B16}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:390px;height:844px;overflow:hidden;font-family:Figtree,sans-serif;color:var(--ink);position:relative;
+background:repeating-linear-gradient(92deg,#6E4222 0 7px,#7A4A26 7px 15px,#724523 15px 26px)}
+.status{height:47px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-weight:700;font-size:15px;color:#F4EEDD}
+.front{margin:6px 16px 0;padding:16px;border-radius:10px;background:var(--oakD);box-shadow:inset 0 2px 0 rgba(255,255,255,.08),inset 0 -3px 0 rgba(0,0,0,.25)}
+.frame{margin:0 auto;width:250px;border:3px solid var(--brass);border-radius:4px;background:var(--stock);padding:8px 10px;text-align:center;box-shadow:0 2px 0 #7a5d20}
+.frame b{font-family:'Courier Prime';font-size:22px;letter-spacing:1px}
+.frame div{font-family:'Courier Prime';font-size:12px;margin-top:2px;color:#4a4136}
+.pull{width:70px;height:16px;border:3px solid var(--brass);border-top:none;border-radius:0 0 40px 40px;margin:10px auto 0}
+.tabsrow{display:flex;gap:6px;margin:16px 16px 0}
+.idx{flex:1;background:#E9DFC6;border-radius:6px 6px 0 0;padding:5px 0;text-align:center;font-family:'Courier Prime';font-weight:700;font-size:13px;color:#4a4136}
+.idx.on{background:var(--stock);color:var(--ink)}
+.drawer{margin:0 16px;background:var(--stock);border-radius:0 0 8px 8px;padding:14px 12px 0;height:600px;overflow:hidden;position:relative}
+.ic{padding-bottom:14px !important;background:#FBF7EC;border:1px solid #D9CDB1;border-radius:4px;padding:0 12px 10px;margin-bottom:10px;position:relative;box-shadow:0 -2px 6px rgba(60,40,10,.12);
+background-image:repeating-linear-gradient(transparent 0 21px,rgba(108,143,199,.35) 21px 22px);background-position:0 30px}
+.ic .top{height:30px;border-bottom:2px solid var(--red);display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:4px;font-family:'Courier Prime';font-weight:700;font-size:15px}
+.ic .top span{font-size:11px;font-weight:400;color:#6a5f50}
+.ic p{font-family:'Courier Prime';font-size:12.5px;line-height:22px;color:#333}
+.stamp{position:absolute;right:14px;top:38px;border:2.5px solid var(--red);color:var(--red);font-family:'Courier Prime';font-weight:700;font-size:13px;padding:2px 8px;transform:rotate(-8deg);border-radius:3px;opacity:.85}
+.hole{position:absolute;left:50%;bottom:-2px;width:12px;height:12px;border-radius:50%;background:var(--oakD);margin-left:-6px}
+.ic.last{margin-bottom:0}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:86px;background:var(--oakD);display:flex;justify-content:space-around;padding-top:12px;border-top:3px solid var(--brass)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#CDB894;width:60px}
+.tab.on{color:#fff}
+.scan{width:58px;height:58px;border-radius:50%;background:var(--red);border:3px solid var(--brass);margin-top:-28px;display:flex;align-items:center;justify-content:center}
+</style></head><body>
+<div class="status"><span>9:41</span><span>●●● ▮</span></div>
+<div class="front">
+  <div class="frame"><b>SEAN'S LIBRARY</b><div>412 cards · 3 on loan · filed A–Z</div></div>
+  <div class="pull"></div>
+</div>
+<div class="tabsrow"><div class="idx on">All</div><div class="idx">Living</div><div class="idx">Bedroom</div><div class="idx">Loaned</div></div>
+<div class="drawer">
+  <div class="ic"><div class="top">Clarke, Susanna<span>823.92 CLA</span></div><p>Piranesi. Bloomsbury, 2020.<br>Shelf: Living room, 2nd from top</p><div class="stamp">OWNED</div><div class="hole"></div></div>
+  <div class="ic"><div class="top">Eliot, George<span>823.8 ELI</span></div><p>Middlemarch. Penguin Classics.<br>Visiting Maya since Aug 30</p><div class="stamp" style="color:var(--blue);border-color:var(--blue)">ON LOAN</div><div class="hole"></div></div>
+  <div class="ic"><div class="top">Herbert, Frank<span>813.54 HER</span></div><p>Dune. Ace, 1990. — 3 copies<br>Shelves: Living room, Bedroom</p><div class="stamp">OWNED ×3</div><div class="hole"></div></div>
+  <div class="ic"><div class="top">Tolkien, J.R.R.<span>823.912 TOL</span></div><p>The Hobbit. Houghton Mifflin.<br>Shelf: Living room, bottom</p><div class="stamp">OWNED</div><div class="hole"></div></div>
+  <div class="ic last"><div class="top">Williams, John<span>813.54 WIL</span></div><p>Stoner. NYRB Classics, 2006.<br>Shelf: Bedroom</p><div class="hole"></div></div>
+</div>
+<div class="tabs">
+  <div class="tab on"><svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 11h16M10 8h4"/></svg>Drawer</div>
+  <div class="tab"><svg width="24" height="24" fill="none" stroke="#CDB894" stroke-width="2"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>Search</div>
+  <div class="tab"><div class="scan"><svg width="26" height="26" fill="none" stroke="#fff" stroke-width="2.4"><path d="M4 8V4h4M18 4h4v4M22 18v4h-4M8 22H4v-4M7 13h12"/></svg></div></div>
+  <div class="tab"><svg width="24" height="24" fill="none" stroke="#CDB894" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Wishlist</div>
+  <div class="tab"><svg width="24" height="24" fill="none" stroke="#CDB894" stroke-width="2"><circle cx="12" cy="9" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profile</div>
+</div>
+</body></html>

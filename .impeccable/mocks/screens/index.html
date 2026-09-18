@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Library Screens</title>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@500;700;800;900&family=Gochi+Hand&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FBFAF4;--ink:#2B1D14;--soft:#6B5646;--bus:#F4B41A;--tape:#F7E7B4}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:Figtree,sans-serif;padding:36px 16px 80px}
+header{max-width:1400px;margin:0 auto 28px}
+h1{font-family:'Bagel Fat One';font-weight:400;font-size:clamp(34px,5vw,56px);line-height:1}
+header p{max-width:720px;margin-top:10px;font-size:16px;font-weight:600;color:var(--soft);line-height:1.5}
+.grid{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:40px 28px}
+figure{width:320px}
+.phone{width:320px;height:693px;border:3px solid var(--ink);border-radius:38px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);background:#fff;position:relative}
+.phone iframe{width:390px;height:844px;border:0;transform:scale(.8205);transform-origin:0 0}
+figcaption{margin-top:14px}
+figcaption b{font-size:17px;font-weight:900}
+figcaption p{margin-top:4px;font-size:13.5px;font-weight:600;color:var(--soft);line-height:1.45}
+.motion{margin-top:8px;background:var(--tape);font-family:'Gochi Hand';font-size:15px;padding:4px 10px;display:inline-block;transform:rotate(-1deg);line-height:1.3}
+button{margin-top:10px;height:40px;padding:0 16px;border:2.5px solid var(--ink);border-radius:12px;background:var(--bus);font:900 13.5px Figtree;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+button:active{transform:translate(3px,3px);box-shadow:none}
+</style></head><body>
+<header>
+  <h1>My Library, on the shelf</h1>
+  <p>Book Fair Saturday · Painted Bookcase, with handwritten shelf notes and a Lamplight dark mode. Every phone below is live: the Store Mode verdicts play their animation, and you can tap Dewey, the leaning book, and the buttons.</p>
+</header>
+<div class="grid">
+  <figure><div class="phone"><iframe src="library.html" title="Library"></iframe></div>
+    <figcaption><b>Shelves (home)</b><p>Each shelf is a room. Handwritten tape notes carry the wit.</p><span class="motion">Tap Dewey for a new line · tap the leaning book to wobble it</span></figcaption></figure>
+
+  <figure><div class="phone"><iframe id="owned" src="scan.html?v=owned" title="Store Mode owned"></iframe></div>
+    <figcaption><b>Store Mode: You own this!</b><p>Scan line roams, locks, sheet springs up, stamp slams ALREADY YOURS, Dewey pops up.</p><button onclick="document.getElementById('owned').contentWindow.play()">Replay the stamp</button></figcaption></figure>
+
+  <figure><div class="phone"><iframe id="new" src="scan.html?v=new" title="Store Mode new find"></iframe></div>
+    <figcaption><b>Store Mode: A new find!</b><p>NEW! sticker slaps on, Dewey gasps. Tap "Add to shelves" to throw the book onto your shelf.</p><button onclick="document.getElementById('new').contentWindow.play()">Replay</button></figcaption></figure>
+
+  <figure><div class="phone"><iframe src="book.html" title="Book detail"></iframe></div>
+    <figcaption><b>Book detail</b><p>The book is pulled off its shelf; the dashed gap shows where it lives. Pocket card lists every copy.</p><span class="motion">Opens with the book sliding out of its spot</span></figcaption></figure>
+
+  <figure><div class="phone"><iframe src="search.html" title="Search"></iframe></div>
+    <figcaption><b>Search</b><p>Your shelves first, then the catalog. A dry aside under the field.</p></figcaption></figure>
+
+  <figure><div class="phone"><iframe src="wishlist.html" title="Wishlist"></iframe></div>
+    <figcaption><b>Wishlist</b><p>The Someday shelf, with "wanted since" stamps and a one-tap "Found it!".</p></figcaption></figure>
+
+  <figure><div class="phone"><iframe src="library.html?lamp=1" title="Lamplight"></iframe></div>
+    <figcaption><b>Lamplight (dark mode)</b><p>The same bookcase at night: oak frame, halftone lamp light, Dewey asleep.</p></figcaption></figure>
+</div>
+</body></html>

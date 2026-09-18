@@ -1,0 +1,163 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Store Mode</title>
+<link rel="stylesheet" href="shared.css"><script src="shared.js"></script>
+<style>
+body{background:#1B130D;color:#fff}
+/* illustrated "camera" backdrop: a bookstore shelf, dimmed with halftone */
+.cam{position:absolute;inset:0;overflow:hidden}
+.cam .storeshelf{position:absolute;left:-10px;right:-10px;display:flex;align-items:flex-end;gap:3px;padding:0 10px}
+.cam .storeshelf .sp{opacity:.55}
+.cam .dim{position:absolute;inset:0;background:rgba(27,19,13,.62)} /* camera scrim — the real app shows the live feed here */
+.pill{position:absolute;top:54px;left:50%;transform:translateX(-50%);background:var(--bus);color:var(--ink);border:2.5px solid var(--ink);border-radius:30px;padding:6px 14px;font-weight:900;font-size:12px;letter-spacing:.8px;box-shadow:3px 3px 0 var(--ink);white-space:nowrap;z-index:5}
+.close{position:absolute;top:50px;left:16px;width:44px;height:44px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;z-index:5}
+.finder{position:absolute;left:50%;top:150px;width:250px;height:250px;margin-left:-125px;z-index:3;transition:transform 160ms var(--ease-out)}
+.finder .c{position:absolute;width:44px;height:44px;border:5px solid var(--bus)}
+.finder .c.tl{left:0;top:0;border-right:0;border-bottom:0;border-radius:14px 0 0 0}
+.finder .c.tr{right:0;top:0;border-left:0;border-bottom:0;border-radius:0 14px 0 0}
+.finder .c.bl{left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 14px}
+.finder .c.br{right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 14px 0}
+.held{position:absolute;left:45px;top:30px;width:160px;height:200px;background:#FBFAF4;border:2.5px solid var(--ink);border-radius:4px;transform:rotate(-4deg)}
+.held .bc{position:absolute;left:22px;bottom:20px;width:116px;height:52px;background:#fff;border:2px solid var(--ink);display:flex;gap:2px;padding:6px 8px}
+.held .bc i{display:block;background:var(--ink);height:100%}
+.held .blurb{position:absolute;left:14px;right:14px;top:16px;display:flex;flex-direction:column;gap:6px}
+.held .blurb b{display:block;height:6px;background:#D8CBB6;border-radius:3px}
+.line{position:absolute;left:14px;right:14px;height:4px;background:var(--bus);border:1.5px solid var(--ink);border-radius:3px;top:30px}
+.roam{animation:roam 1.1s ease-in-out infinite alternate}
+@keyframes roam{from{top:26px}to{top:218px}}
+.hint{position:absolute;top:420px;left:0;right:0;text-align:center;font-weight:800;font-size:14px;color:#FBFAF4;z-index:3}
+
+/* verdict sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;border-top:2.5px solid var(--ink);border-radius:26px 26px 0 0;padding:22px 20px 34px;z-index:10;transform:translateY(105%);color:var(--ink)}
+.sheet.show{transform:translateY(0);transition:transform 480ms var(--ease-out)}
+.sheet.owned{background:var(--grass);color:#fff}
+.sheet.new{background:var(--paper)}
+.verdict{font-size:40px}
+.mini{margin-top:14px;display:flex;gap:14px;align-items:center;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:14px;padding:12px;position:relative;box-shadow:3px 3px 0 var(--ink)}
+.mini h3{font-size:17px;font-weight:900;line-height:1.15}
+.mini p{font-size:13px;font-weight:700;color:var(--soft);margin-top:3px}
+.rows{margin-top:6px;font-size:13px;font-weight:800}
+.rows div{display:flex;gap:6px;align-items:baseline;padding:3px 0}
+.rows i{flex:1;border-bottom:2px dotted #C9BBAA;transform:translateY(-4px)}
+.stamp{position:absolute;right:10px;top:-18px;border:3.5px solid var(--tomato);color:var(--tomato);background:rgba(255,255,255,.92);font-family:'Bagel Fat One';font-size:17px;padding:3px 10px;border-radius:6px;transform:rotate(-9deg);opacity:0;pointer-events:none}
+.stamp.slam{animation:slam 420ms cubic-bezier(.2,.9,.25,1) forwards}
+@keyframes slam{0%{opacity:0;transform:scale(2.4) rotate(-22deg)}45%{opacity:1;transform:scale(.92) rotate(-8deg)}62%{transform:scale(1.04) rotate(-9deg)}100%{opacity:1;transform:scale(1) rotate(-9deg)}}
+.splat{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--tomato);opacity:0}
+.splat.go{animation:splat 380ms ease-out forwards}
+@keyframes splat{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+.shake{animation:shake 240ms ease-out}
+@keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-1px,1px)}}
+.dwwrap{position:absolute;right:16px;top:-54px;z-index:11;transform:translateY(40px) scale(.6);opacity:0}
+.dwwrap.pop{animation:pop 520ms cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes pop{to{transform:translateY(0) scale(1);opacity:1}}
+.say{position:absolute;right:88px;top:-58px;width:176px;opacity:0;transform:scale(.8);transform-origin:right bottom}
+.say.in{transition:all 260ms var(--ease-out);opacity:1;transform:scale(1)}
+.actions{display:flex;gap:10px;margin-top:16px}
+.actions .btn{flex:1}
+.link{margin-top:12px;text-align:center;font-weight:800;font-size:13.5px;text-decoration:underline}
+.sticker{position:absolute;right:-8px;top:-16px;width:62px;height:62px;border-radius:50%;background:var(--bus);border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Bagel Fat One';font-size:16px;transform:rotate(14deg) scale(0);box-shadow:2px 2px 0 var(--ink)}
+.sticker.slap{animation:slap 380ms cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes slap{to{transform:rotate(14deg) scale(1)}}
+.toast{position:absolute;left:20px;right:20px;top:110px;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:14px;padding:12px 14px;font-weight:800;font-size:13.5px;box-shadow:3px 3px 0 var(--ink);z-index:20;transform:translateY(-320px);transition:transform 380ms var(--ease-out)}
+.toast.in{transform:translateY(0)}
+.flybook{position:absolute;z-index:30;transition:transform 560ms cubic-bezier(.5,0,.2,1),opacity 560ms}
+</style></head>
+<body>
+<script>
+const MODE = new URLSearchParams(location.search).get('v')==='new' ? 'new' : 'owned';
+// backdrop
+let bg = '<div class="cam">';
+[[40,'p'],[210,'t'],[380,'g'],[560,'b'],[740,'m']].forEach(([top,c],i)=>{
+  const cols='tpbgmwkc'; let s='';
+  for(let k=0;k<16;k++){ const cc=cols[(k*3+i)%cols.length]; s+=spine(['',cc,18+((k*7+i*3)%16),120+((k*13+i*5)%50)]); }
+  bg += `<div class="storeshelf" style="top:${top}px;height:170px">${s}</div><div style="position:absolute;left:0;right:0;top:${top+170}px;height:14px;background:#6E4222;border-top:2px solid #1B130D;border-bottom:2px solid #1B130D"></div>`;
+});
+bg += '<div class="dim"></div></div>';
+document.write(bg + status().replace('class="status"','class="status" style="position:relative;z-index:4"'));
+document.write(`<div class="close"><svg width="18" height="18" stroke="#2B1D14" stroke-width="3"><path d="M3 3l12 12M15 3L3 15"/></svg></div>
+<div class="pill">STORE MODE · 7 SCANNED</div>
+<div class="finder" id="finder"><div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
+  <div class="held"><div class="blurb"><b style="width:90%"></b><b style="width:70%"></b><b style="width:80%"></b></div>
+  <div class="bc">${Array.from({length:22},(_,i)=>`<i style="width:${[2,1,3,1,2,1,1,3][i%8]}px"></i>`).join('')}</div></div>
+  <div class="line roam" id="line"></div></div>
+<div class="hint" id="hint">Point at a barcode. I'll do the rest.</div>`);
+
+const owned = `
+<div class="sheet owned" id="sheet">
+  <div class="dwwrap" id="dw">${dewey('smug',70)}</div>
+  <div class="bubble say" id="say">Copy #4? You own three. I've counted. Twice.</div>
+  <div class="verdict display">You own this!</div>
+  <div class="mini" id="mini">
+    ${cover({title:'Dune',author:'Frank Herbert',c:'p',w:62,h:92})}
+    <div><h3>Dune</h3><p>Frank Herbert · Ace, 1990</p>
+      <div class="rows"><div>Copies<i></i>3</div><div>Living room<i></i>1</div><div>Bedroom<i></i>2</div></div></div>
+    <div class="stamp" id="stamp">ALREADY YOURS</div>
+  </div>
+  <div style="margin-top:12px;font-weight:800;font-size:13.5px">Same edition you scanned. Put it back gently.</div>
+  <div class="actions"><div class="btn primary" id="again">Keep scanning</div></div>
+  <div class="link">Add copy #4 anyway</div>
+</div>`;
+const fresh = `
+<div class="sheet new" id="sheet">
+  <div class="dwwrap" id="dw">${dewey('gasp',70)}</div>
+  <div class="bubble say" id="say">Ooh. We don't have this one. Yet.</div>
+  <div class="verdict display">A new find!</div>
+  <div class="mini" id="mini">
+    <div id="cv">${cover({title:'Remains',author:'Kazuo Ishiguro',c:'t',w:62,h:92,motif:'house'})}</div>
+    <div><h3>The Remains of the Day</h3><p>Kazuo Ishiguro · Faber, 2005</p><p style="color:var(--grass)">Not on any shelf · not on your wishlist</p></div>
+    <div class="sticker" id="stk">NEW!</div>
+  </div>
+  <div style="margin-top:14px;font-weight:800;font-size:13px">Shelve it in</div>
+  <div style="display:flex;gap:8px;margin-top:8px"><span class="chip on">Living room</span><span class="chip">Bedroom</span><span class="chip">Study</span></div>
+  <div class="actions"><div class="btn ghost" id="wish">Wishlist it</div><div class="btn primary" id="add">Add to shelves</div></div>
+</div>
+<div class="toast" id="toast">Shelved in Living room. Book #413 — a new record.</div>`;
+document.write(MODE==='owned'?owned:fresh);
+
+// ---- timeline ----
+const $ = id => document.getElementById(id);
+function reset(){
+  $('sheet').classList.remove('show'); $('line').classList.add('roam'); $('line').style.top='';
+  $('finder').style.transform=''; $('hint').style.opacity=1;
+  $('dw').classList.remove('pop'); $('say').classList.remove('in');
+  if($('stamp')) $('stamp').classList.remove('slam');
+  if($('stk')) $('stk').classList.remove('slap');
+  if($('toast')) $('toast').classList.remove('in');
+  document.querySelectorAll('.splat,.flybook').forEach(n=>n.remove());
+}
+function play(){
+  reset();
+  setTimeout(()=>{ // lock
+    $('line').classList.remove('roam'); $('line').style.top='172px';
+    $('finder').style.transform='scale(.95)';
+    navigator.vibrate && navigator.vibrate(20);
+  },1300);
+  setTimeout(()=>{ $('finder').style.transform='scale(1)'; $('hint').style.opacity=0; $('sheet').classList.add('show'); },1450);
+  if (MODE==='owned'){
+    setTimeout(()=>{ // stamp thunk
+      $('stamp').classList.add('slam');
+      setTimeout(()=>{ $('mini').classList.remove('shake'); void $('mini').offsetWidth; $('mini').classList.add('shake');
+        const m=$('mini'); for(let i=0;i<7;i++){ const s=document.createElement('div'); s.className='splat';
+          s.style.right=(70+Math.random()*60)+'px'; s.style.top='-4px'; s.style.setProperty('--dx',(Math.random()*60-30)+'px'); s.style.setProperty('--dy',(Math.random()*-30-6)+'px');
+          m.appendChild(s); requestAnimationFrame(()=>s.classList.add('go')); }
+        navigator.vibrate && navigator.vibrate([0,40]);
+      },190);
+    },1950);
+  } else {
+    setTimeout(()=>$('stk').classList.add('slap'),1950);
+  }
+  setTimeout(()=>$('dw').classList.add('pop'),2250);
+  setTimeout(()=>$('say').classList.add('in'),2600);
+}
+window.play = play;
+if ($('again')) $('again').onclick = play;
+if ($('add')) $('add').onclick = () => {
+  const r = $('cv').getBoundingClientRect(); const f = $('cv').cloneNode(true);
+  f.className='flybook'; f.style.left=r.left+'px'; f.style.top=r.top+'px'; document.body.appendChild(f);
+  requestAnimationFrame(()=>{ f.style.transform=`translate(${40-r.left}px,${-r.top-60}px) rotate(-30deg) scale(.4)`; f.style.opacity='.2'; });
+  $('say').innerHTML='Welcome to the family. Mind the Dunes.';
+  setTimeout(()=>$('toast').classList.add('in'),380);
+};
+if ($('wish')) $('wish').onclick = () => { $('say').innerHTML='Wishlisted. The Someday shelf grows.'; };
+play();
+</script>
+</body></html>

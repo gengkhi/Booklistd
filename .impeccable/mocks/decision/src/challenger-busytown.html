@@ -1,0 +1,83 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Busytown Cutaway</title>
+<link href="https://fonts.googleapis.com/css2?family=Grandstander:wght@800&family=Figtree:wght@500;600;700;800&display=block" rel="stylesheet">
+<style>
+:root{--white:#FFFFFF;--red:#B83A2B;--yel:#F2C12E;--grn:#4F9A4A;--brn:#5A3A22;--sky:#DDEFF6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:390px;height:844px;overflow:hidden;background:var(--white);font-family:Figtree,sans-serif;color:var(--brn);position:relative}
+.status{height:47px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-weight:700;font-size:15px}
+h1{font-family:Grandstander;font-weight:800;font-size:34px;padding:2px 20px 0;color:var(--red)}
+.sub{padding:0 20px;font-size:13px;font-weight:600}
+svg.scene{display:block;margin:10px auto 0}
+.lbl{font-family:Figtree;font-size:10.5px;font-weight:700;fill:#5A3A22}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:86px;background:#fff;border-top:2px solid var(--brn);display:flex;justify-content:space-around;padding-top:10px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;width:60px;color:#8a6d55}
+.tab.on{color:var(--red)}
+.scan{width:60px;height:60px;border-radius:50%;background:var(--yel);border:2px solid var(--brn);margin-top:-28px;display:flex;align-items:center;justify-content:center}
+.hint{position:absolute;left:20px;right:20px;bottom:100px;background:var(--sky);border:2px solid var(--brn);border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700}
+</style></head><body>
+<div class="status"><span>9:41</span><span>●●● ▮</span></div>
+<h1>Sean's house of books</h1>
+<div class="sub">412 books in 4 rooms · tap a room to open its wall</div>
+<svg class="scene" width="360" height="520" viewBox="0 0 360 520" stroke="#5A3A22" stroke-width="2" stroke-linejoin="round">
+  <!-- roof -->
+  <path d="M20 120 L180 20 L340 120 Z" fill="#B83A2B"/>
+  <rect x="250" y="40" width="26" height="50" fill="#B83A2B"/>
+  <!-- walls -->
+  <rect x="30" y="120" width="300" height="370" fill="#FFF7E0"/>
+  <line x1="30" y1="300" x2="330" y2="300"/>
+  <line x1="180" y1="120" x2="180" y2="490"/>
+  <!-- attic room: study -->
+  <g transform="translate(0,22)">
+    <rect x="44" y="150" width="122" height="10" fill="#F2C12E"/>
+    <g fill="#4F9A4A"><rect x="48" y="118" width="10" height="32"/><rect x="60" y="122" width="12" height="28" fill="#B83A2B"/><rect x="74" y="116" width="9" height="34" fill="#2F6FB0"/><rect x="85" y="124" width="12" height="26" fill="#F2C12E"/><rect x="99" y="120" width="10" height="30"/></g>
+    <rect x="44" y="230" width="122" height="10" fill="#F2C12E"/>
+    <g><rect x="48" y="200" width="11" height="30" fill="#2F6FB0"/><rect x="61" y="196" width="10" height="34" fill="#B83A2B"/><rect x="73" y="204" width="13" height="26" fill="#fff"/><rect x="88" y="198" width="9" height="32" fill="#4F9A4A"/></g>
+    <!-- worker on ladder -->
+    <path d="M128 268 L140 150 M150 268 L162 150 M131 262 h22 M134 232 h22 M137 202 h22" fill="none"/>
+    <circle cx="150" cy="186" r="9" fill="#F2C12E"/><rect x="143" y="195" width="14" height="22" rx="4" fill="#4F9A4A"/>
+  </g>
+  <!-- living room -->
+  <g transform="translate(0,22)">
+    <rect x="194" y="160" width="122" height="10" fill="#B83A2B"/>
+    <g><rect x="198" y="128" width="11" height="32" fill="#F2C12E"/><rect x="211" y="124" width="13" height="36" fill="#2F6FB0"/><rect x="226" y="132" width="10" height="28" fill="#fff"/><rect x="238" y="126" width="12" height="34" fill="#4F9A4A"/><rect x="252" y="130" width="9" height="30" fill="#B83A2B"/><rect x="263" y="124" width="12" height="36" fill="#F2C12E"/></g>
+    <rect x="194" y="240" width="122" height="10" fill="#B83A2B"/>
+    <g><rect x="198" y="210" width="12" height="30" fill="#4F9A4A"/><rect x="212" y="206" width="10" height="34" fill="#2F6FB0"/><rect x="224" y="212" width="13" height="28" fill="#F2C12E"/></g>
+    <!-- armchair reader -->
+    
+  </g>
+  <!-- bedroom -->
+  <g>
+    <rect x="44" y="360" width="122" height="10" fill="#4F9A4A"/>
+    <g><rect x="48" y="330" width="12" height="30" fill="#4F9A4A"/><rect x="62" y="326" width="12" height="34" fill="#fff"/><rect x="76" y="324" width="12" height="36" fill="#2F6FB0"/><rect x="90" y="332" width="10" height="28" fill="#B83A2B"/></g>
+    <rect x="60" y="400" width="100" height="36" rx="6" fill="#fff"/><rect x="60" y="390" width="30" height="20" rx="6" fill="#F2C12E"/>
+  </g>
+  <!-- hallway -->
+  <g>
+    <rect x="194" y="400" width="122" height="10" fill="#F2C12E"/>
+    <g><rect x="198" y="370" width="11" height="30" fill="#B83A2B"/><rect x="211" y="366" width="12" height="34" fill="#2F6FB0"/></g>
+    <rect x="270" y="420" width="36" height="70" fill="#B83A2B"/><circle cx="298" cy="456" r="3" fill="#F2C12E"/>
+  </g>
+  <!-- pointer labels -->
+  <g stroke-width="1.5" fill="#fff">
+    <rect x="38" y="262" width="80" height="22" rx="4"/><rect x="194" y="128" width="116" height="22" rx="4" transform="translate(0,142)"/>
+    <rect x="38" y="306" width="92" height="22" rx="4" transform="translate(0,142)"/><rect x="194" y="306" width="94" height="22" rx="4" transform="translate(0,110)"/>
+  </g>
+  <g stroke="none">
+    <text class="lbl" x="46" y="277">Study · 94</text>
+    <text class="lbl" x="202" y="285">Living room · 146</text>
+    <text class="lbl" x="46" y="463">Bedroom · 88</text>
+    <text class="lbl" x="202" y="431">Hallway · 84</text>
+  </g>
+  <line x1="0" y1="490" x2="360" y2="490" stroke-width="3"/>
+  <rect x="0" y="492" width="360" height="28" fill="#4F9A4A" stroke="none"/>
+</svg>
+<div class="hint">Busy day: 9 new books shelved this month, 3 visiting Maya.</div>
+<div class="tabs">
+  <div class="tab on"><svg width="24" height="24" fill="none" stroke="#B83A2B" stroke-width="2.2"><path d="M4 11l8-7 8 7v9H4z"/></svg>House</div>
+  <div class="tab"><svg width="24" height="24" fill="none" stroke="#8a6d55" stroke-width="2.2"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>Search</div>
+  <div class="tab"><div class="scan"><svg width="26" height="26" fill="none" stroke="#5A3A22" stroke-width="2.4"><path d="M4 8V4h4M18 4h4v4M22 18v4h-4M8 22H4v-4M7 13h12"/></svg></div></div>
+  <div class="tab"><svg width="24" height="24" fill="none" stroke="#8a6d55" stroke-width="2.2"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/></svg>Wishlist</div>
+  <div class="tab"><svg width="24" height="24" fill="none" stroke="#8a6d55" stroke-width="2.2"><circle cx="12" cy="9" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profile</div>
+</div>
+</body></html>
