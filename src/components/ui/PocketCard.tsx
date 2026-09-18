@@ -28,7 +28,7 @@ export function LeaderRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'baseline', paddingVertical: 4 }} accessible accessibilityLabel={`${label}: ${value}`}>
       <Text style={{ fontFamily: font.bold, fontSize: 14, color: ink.brown }}>{label}</Text>
-      <Text numberOfLines={1} ellipsizeMode="clip" style={{ flex: 1, marginHorizontal: 6, color: '#C9BBAA', fontFamily: font.black, fontSize: 12 }}>
+      <Text numberOfLines={1} ellipsizeMode="clip" style={{ flex: 1, marginHorizontal: 6, color: ink.soft, fontFamily: font.black, fontSize: 12 }}>
         {' · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·'}
       </Text>
       <Text style={{ fontFamily: font.black, fontSize: 14, color: ink.brown }}>{value}</Text>

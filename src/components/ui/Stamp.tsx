@@ -42,10 +42,11 @@ export function Stamp({
   return (
     <Animated.View
       pointerEvents="none"
+      accessible
       accessibilityLabel={label}
-      style={[{ borderWidth: 3.5, borderColor: color, backgroundColor: ink.white, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 3 }, s, style]}
+      style={[{ borderWidth: 2.5, borderColor: color, backgroundColor: ink.white, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 3 }, s, style]}
     >
-      <Text style={{ fontFamily: font.display, fontSize: 17, color }}>{label}</Text>
+      <Text style={{ fontFamily: font.display, fontSize: 19, color }}>{label}</Text>
     </Animated.View>
   );
 }
