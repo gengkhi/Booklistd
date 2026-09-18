@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T00:00:00Z",
+  "title": "Design System: My Library — Painted Bookcase",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#FBFAF4", "tonalRamp": ["#4b4b49", "#8d8c89", "#c9c8c3", "#fbfaf4", "#fcfbf7", "#fdfdfa", "#fefefc", "#fffffe"] },
+      "case-back": { "role": "neutral", "displayName": "Case Back", "canonical": "#F3E9D2" },
+      "brown": { "role": "neutral", "displayName": "Ink Brown", "canonical": "#2B1D14", "tonalRamp": ["#0d0906", "#18100b", "#221710", "#33261d", "#665c56", "#99938e", "#c4c0bd", "#eae8e7"] },
+      "soft": { "role": "neutral", "displayName": "Soft Brown", "canonical": "#6B5646" },
+      "tomato": { "role": "secondary", "displayName": "Tomato", "canonical": "#E2462B", "tonalRamp": ["#44150d", "#7f2718", "#b53822", "#e34d33", "#ea7a66", "#f1a699", "#f7cbc4", "#fcecea"] },
+      "bus": { "role": "primary", "displayName": "Bus Yellow", "canonical": "#F4B41A", "tonalRamp": ["#493608", "#89650f", "#c39015", "#f4b723", "#f7c95a", "#fadb91", "#fceabf", "#fef8e8"] },
+      "pool": { "role": "secondary", "displayName": "Pool Blue", "canonical": "#2F6FB0", "tonalRamp": ["#0e2135", "#1a3e63", "#26598d", "#3775b3", "#6997c6", "#9bbad9", "#c5d7e9", "#eaf1f7"] },
+      "grass": { "role": "secondary", "displayName": "Grass Green", "canonical": "#3E9A5A", "tonalRamp": ["#132e1b", "#235632", "#327b48", "#469e61", "#74b688", "#a2cfb0", "#c9e3d1", "#ecf5ee"] },
+      "plum": { "role": "secondary", "displayName": "Plum", "canonical": "#7B3F6E", "tonalRamp": ["#251321", "#45233e", "#623258", "#804774", "#a07597", "#c0a3b9", "#dac9d6", "#f2ecf1"] },
+      "tape": { "role": "neutral", "displayName": "Tape", "canonical": "#F7E7B4", "tonalRamp": ["#4a4536", "#8a8165", "#c6b990", "#f7e8b7", "#f9eec9", "#fbf3db", "#fdf8ea", "#fefdf8"] },
+      "cream": { "role": "neutral", "displayName": "Cream (spine swatch only)", "canonical": "#F3E0BE", "tonalRamp": ["#494339", "#887d6a", "#c2b398", "#f3e1c1", "#f6e9d0", "#f9f0e0", "#fcf6ed", "#fefcf9"] },
+      "white": { "role": "neutral", "displayName": "White", "canonical": "#FFFFFF" },
+      "scene-dark": { "role": "neutral", "displayName": "Scene Dark", "canonical": "#1B130D", "note": "Store Mode camera backdrop, not used in light-scheme UI chrome." },
+      "lamp-paper": { "role": "neutral", "displayName": "Lamplight Paper", "canonical": "#2E2016" },
+      "lamp-case-back": { "role": "neutral", "displayName": "Lamplight Case Back", "canonical": "#1F140D" },
+      "lamp-text": { "role": "neutral", "displayName": "Lamplight Text", "canonical": "#FFF4E0" },
+      "lamp-soft": { "role": "neutral", "displayName": "Lamplight Soft Text", "canonical": "#D9C3A0" },
+      "lamp-line": { "role": "neutral", "displayName": "Lamplight Outline", "canonical": "#120B06" },
+      "lamp-frame-oak": { "role": "neutral", "displayName": "Lamplight Oak Frame", "canonical": "#A2622F", "tonalRamp": ["#311d0e", "#5b371a", "#824e26", "#a66837", "#bc8e69", "#d2b49b", "#e5d3c5", "#f6efea"] },
+      "lamp-room-tag": { "role": "neutral", "displayName": "Lamplight Room Tag Gold", "canonical": "#E3B55B", "note": "The one Lamplight surface that isn't a straight brown/cream swap of its light counterpart (white)." }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Bagel Fat One)", "purpose": "Screen titles, verdict headline, cover-art titles, stamp copy. Never body or UI chrome." },
+      "black": { "displayName": "Black (Figtree 900)", "purpose": "Primary button/chip-selected labels, verdict card title, vertical spine titles, pocket-card values." },
+      "heavy": { "displayName": "Heavy (Figtree 800)", "purpose": "Chip labels, LeaderRow emphasis, status lines." },
+      "bold": { "displayName": "Bold (Figtree 700)", "purpose": "Sub lines, secondary/soft text." },
+      "hand": { "displayName": "Hand (Gochi Hand)", "purpose": "TapeNote only — never a control. Dewey's speech bubble uses Bold, not Hand." }
+    },
+    "shadows": [
+      { "name": "raised-default", "value": "solid offset layer, 3px right/down, color = scheme line, radius matches host", "purpose": "Default hard shadow: pocket cards, buttons, bubbles, toasts, stamp host card." },
+      { "name": "raised-bookcase", "value": "solid offset layer, 4px right/down, radius 8", "purpose": "The bookcase panel — pushed slightly harder than the default to mark it as the screen's main object." },
+      { "name": "raised-back-button", "value": "solid offset layer, 2px right/down, radius 22", "purpose": "Book detail's circular back control — the smallest offset in the system." },
+      { "name": "raised-pulled-cover", "value": "solid offset layer, 5px right/down, radius 6", "purpose": "Book detail's tilted (-4deg) cover art — the largest offset, the 'pulled off the shelf' moment." }
+    ],
+    "motion": [
+      { "name": "feedback", "value": "120ms", "purpose": "Press/release sink, spine lift-in." },
+      { "name": "routine", "value": "220ms", "purpose": "Spine release, bubble ZoomIn, exits generally (~65% of entrance durations)." },
+      { "name": "overlay", "value": "450ms", "purpose": "Verdict sheet spring-up." },
+      { "name": "focal", "value": "600ms", "purpose": "Book detail cover pulled-off-shelf entrance." },
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for all timing-based motion." },
+      { "name": "pop-spring", "value": "damping 9, stiffness 180, mass 0.7", "purpose": "The system's only bounce: Dewey's pop-in and the Sticker's slap-on." },
+      { "name": "stamp-slam", "value": "420ms, scale 2.4→0.92→1.04→1, rotate -22deg→-8deg→-9deg, cubic-bezier(0.2,0.9,0.25,1)", "purpose": "The verdict stamp slamming down; fires a heavy haptic + 3px card shake on impact." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Yellow, the only legal non-Store-Mode use of bus yellow. Face sinks 3px into its own drawn shadow on press.",
+      "html": "<button class=\"ds-btn-primary\">Scan your first book</button>",
+      "css": ".ds-btn-primary { position: relative; height: 52px; padding: 0 18px; border-radius: 14px; border: 2.5px solid #2B1D14; background: #F4B41A; color: #2B1D14; font-family: 'Figtree', sans-serif; font-weight: 900; font-size: 15px; box-shadow: 3px 3px 0 #2B1D14; transition: transform 0.12s cubic-bezier(0.16,1,0.3,1), box-shadow 0.12s cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { filter: brightness(1.02); } .ds-btn-primary:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #2B1D14; } .ds-btn-primary:focus-visible { outline: 3px solid #2F6FB0; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "White secondary button, same outline/shadow language as primary.",
+      "html": "<button class=\"ds-btn-ghost\">Move shelf</button>",
+      "css": ".ds-btn-ghost { position: relative; height: 52px; padding: 0 18px; border-radius: 14px; border: 2.5px solid #2B1D14; background: #FFFFFF; color: #2B1D14; font-family: 'Figtree', sans-serif; font-weight: 900; font-size: 15px; box-shadow: 3px 3px 0 #2B1D14; transition: transform 0.12s cubic-bezier(0.16,1,0.3,1), box-shadow 0.12s cubic-bezier(0.16,1,0.3,1); } .ds-btn-ghost:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #2B1D14; } .ds-btn-ghost:focus-visible { outline: 3px solid #2F6FB0; outline-offset: 2px; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip-selected",
+      "description": "Full-pill room/status chip. Selected = brown fill / white text; unselected = white fill / brown text.",
+      "html": "<div class=\"ds-chip-row\"><button class=\"ds-chip ds-chip--selected\">Living room</button><button class=\"ds-chip\">Bedroom</button></div>",
+      "css": ".ds-chip-row { display: flex; gap: 8px; } .ds-chip { height: 32px; padding: 0 13px; border-radius: 999px; border: 2px solid #2B1D14; background: #FFFFFF; color: #2B1D14; font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 12.5px; } .ds-chip--selected { background: #2B1D14; color: #FFFFFF; } .ds-chip:hover { filter: brightness(0.97); } .ds-chip:focus-visible { outline: 3px solid #2F6FB0; outline-offset: 2px; }"
+    },
+    {
+      "name": "Pocket Card",
+      "kind": "card",
+      "refersTo": "pocket-card",
+      "description": "White card with a tomato top rule and dotted-leader rows. Replaces stat-grid layouts system-wide.",
+      "html": "<div class=\"ds-pocket-card\"><div class=\"ds-pocket-card__rule\"></div><div class=\"ds-pocket-card__body\"><div class=\"ds-pocket-card__title\">LIBRARY CARD</div><div class=\"ds-leader-row\"><span>Books on shelves</span><span class=\"ds-leader-row__dots\"></span><span>413</span></div></div></div>",
+      "css": ".ds-pocket-card { position: relative; border-radius: 8px; border: 2.5px solid #2B1D14; background: #FFFFFF; box-shadow: 3px 3px 0 #2B1D14; overflow: hidden; } .ds-pocket-card__rule { height: 9px; background: #E2462B; border-bottom: 2px solid #2B1D14; } .ds-pocket-card__body { padding: 8px 14px; } .ds-pocket-card__title { font-family: 'Figtree', sans-serif; font-weight: 900; font-size: 11px; letter-spacing: 0.4px; color: #6B5646; margin-bottom: 2px; } .ds-leader-row { display: flex; align-items: baseline; gap: 6px; padding: 4px 0; font-family: 'Figtree', sans-serif; color: #2B1D14; } .ds-leader-row__dots { flex: 1; border-bottom: 2px dotted #6B5646; margin-bottom: 4px; }"
+    },
+    {
+      "name": "Stamp",
+      "kind": "custom",
+      "description": "Rubber-stamp verdict copy (ALREADY YOURS). Slams onto the verdict card with a heavy haptic and a card shake at impact.",
+      "html": "<div class=\"ds-stamp\">ALREADY YOURS</div>",
+      "css": ".ds-stamp { display: inline-block; border: 2.5px solid #E2462B; background: #FFFFFF; border-radius: 6px; padding: 3px 10px; transform: rotate(-9deg); font-family: 'Bagel Fat One', serif; font-size: 19px; color: #E2462B; }"
+    },
+    {
+      "name": "Sticker",
+      "kind": "custom",
+      "description": "Round yellow 'NEW!' sticker that spring-slaps onto the verdict card on a new find.",
+      "html": "<div class=\"ds-sticker\">NEW!</div>",
+      "css": ".ds-sticker { width: 62px; height: 62px; border-radius: 50%; background: #F4B41A; border: 2.5px solid #2B1D14; box-shadow: 3px 3px 0 #2B1D14; display: flex; align-items: center; justify-content: center; transform: rotate(14deg); font-family: 'Bagel Fat One', serif; font-size: 16px; color: #2B1D14; text-align: center; }"
+    },
+    {
+      "name": "Spine",
+      "kind": "custom",
+      "description": "Signature component: an outlined book spine whose color/size/pattern is deterministic from the copy's id, so a copy always renders the same spine. Vertical title, tappable, lifts on press.",
+      "html": "<button class=\"ds-spine\"><span class=\"ds-spine__title\">THE HOBBIT</span></button>",
+      "css": ".ds-spine { width: 28px; height: 108px; background: #2F6FB0; border: 2px solid #2B1D14; border-radius: 3px; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: transform 0.12s cubic-bezier(0.16,1,0.3,1); } .ds-spine:hover { transform: translateY(-8px); } .ds-spine__title { writing-mode: vertical-rl; transform: rotate(180deg); font-family: 'Figtree', sans-serif; font-weight: 900; font-size: 10.5px; letter-spacing: 0.6px; color: #FFFFFF; white-space: nowrap; }"
+    },
+    {
+      "name": "Shelf / Bookcase",
+      "kind": "custom",
+      "description": "Signature component: a colored plank of standing spines with a room-tag pill and a rotated handwritten tape note, held inside the outlined, hard-shadowed bookcase panel.",
+      "html": "<div class=\"ds-bookcase\"><div class=\"ds-shelf\"><div class=\"ds-shelf__tag\">Living room · 24</div><div class=\"ds-shelf__note\">do not alphabetize</div><div class=\"ds-shelf__plank\"></div></div></div>",
+      "css": ".ds-bookcase { border: 2.5px solid #2B1D14; border-radius: 8px; background: #F3E9D2; box-shadow: 4px 4px 0 #2B1D14; padding-top: 4px; } .ds-shelf { position: relative; padding: 34px 14px 0; min-height: 60px; } .ds-shelf__plank { height: 16px; background: #2F6FB0; border: 2px solid #2B1D14; margin: 0 -2.5px; } .ds-shelf__tag { position: absolute; left: 12px; top: 6px; background: #FFFFFF; border: 2px solid #2B1D14; border-radius: 999px; padding: 3px 10px; font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 11.5px; color: #2B1D14; } .ds-shelf__note { position: absolute; left: 150px; top: 4px; background: #F7E7B4; padding: 1px 10px; transform: rotate(-2deg); font-family: 'Gochi Hand', cursive; font-size: 15px; color: #2B1D14; }"
+    },
+    {
+      "name": "Dewey",
+      "kind": "custom",
+      "description": "SVG bookworm mascot with four moods (happy, smug, gasp, sleep) and a spring pop-in. Speaks true, data-driven, dry one-liners via a speech bubble — never on errors or about the reader.",
+      "html": "<svg class=\"ds-dewey\" viewBox=\"0 0 74 70\" width=\"64\" height=\"61\"><g stroke=\"#2B1D14\" stroke-width=\"2.5\"><circle cx=\"20\" cy=\"56\" r=\"11\" fill=\"#3E9A5A\"/><circle cx=\"34\" cy=\"50\" r=\"12\" fill=\"#3E9A5A\"/><circle cx=\"50\" cy=\"36\" r=\"17\" fill=\"#3E9A5A\"/><circle cx=\"43\" cy=\"33\" r=\"6.5\" fill=\"#FFFFFF\"/><circle cx=\"58\" cy=\"33\" r=\"6.5\" fill=\"#FFFFFF\"/></g><circle cx=\"44\" cy=\"34\" r=\"2.2\" fill=\"#2B1D14\"/><circle cx=\"59\" cy=\"34\" r=\"2.2\" fill=\"#2B1D14\"/><path d=\"M46 45q5 3 10 0\" stroke=\"#2B1D14\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/></svg>",
+      "css": ".ds-dewey { display: block; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Book Fair Saturday",
+    "overview": "My Library is a hand-painted bookcase, not a cover grid. Every copy a reader owns renders as its own standing spine — colored, outlined, sized and patterned deterministically from the copy's database id, so the same book always wears the same spine. Shelves are rooms; a plank of color carries a room tag pill and a handwritten tape note. Dewey, a small SVG bookworm, sits on one shelf and says one true, dry, data-driven thing about the library — never about the owner. The whole world runs on six fixed inks plus paper, 2–2.5px outlines, and hard offset shadows with no blur; nothing is a tint, a gradient, or a soft glow. This is Operate register (PRODUCT.md): the redesign's charm lives in precise, reliable details — the Store Mode verdict, the pocket card, the shelf props — never at the expense of scan speed or legibility.\n\nThe build replaces \"Reading nook at golden hour\" (cream + Fraunces + clay + soft warm shadows) outright. Nothing from that world survives except the underlying data model; palette, type, shadow language and signature components are new from the ground up.",
+    "keyCharacteristics": [
+      "Six fixed inks (tomato, bus/yellow, pool, grass, plum, tape) plus paper and brown ink — no tints, no gradients, halftone dots for extra tone",
+      "Every shape carries a 2–2.5px ink outline and a hard 3–4px offset shadow (never soft, never blurred)",
+      "Bagel Fat One for display type, Figtree for all UI, Gochi Hand reserved for handwritten asides",
+      "Yellow (bus) is spoken for: it is the primary-action color and nothing else",
+      "Each owned copy's spine is deterministic and permanent, derived from its row id",
+      "Dewey's lines are generated from real counts — never invented, never aimed at the reader"
+    ],
+    "rules": [
+      { "name": "The Yellow Rule", "body": "bus (#F4B41A) is the primary-action color and nothing else: the Scan sticker, primary buttons, and Store Mode's own chrome (viewfinder, scan line, session pill). No decorative, informational or secondary use anywhere in the app.", "section": "colors" },
+      { "name": "The No-Tint Rule", "body": "Every color in the system is one of the fixed inks at full saturation, or paper/white. Extra visual weight comes from a halftone dot pattern, an outline weight change, or a different ink — never from lightening, darkening or fading a color toward transparency.", "section": "colors" },
+      { "name": "The Controls-Never-Handwrite Rule", "body": "Gochi Hand renders only inside TapeNote. Every pressable — buttons, chips, tabs, stamps, stickers — uses Figtree, never the hand font, so nothing a user must tap is rendered in a script face.", "section": "typography" },
+      { "name": "The Raised Rule", "body": "Depth is always a solid offset shape behind the content, drawn at the shape's own outline color, never a translucent/blurred shadow. If it isn't drawn by Raised, it isn't a shadow in this system.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep bus yellow exclusive to primary actions and Store Mode's own chrome (the Yellow Rule).",
+      "Do draw all depth as a solid offset shape via Raised, never a blurred/translucent shadow.",
+      "Do derive a copy's spine and fallback cover deterministically from its id, so it never changes between sessions.",
+      "Do keep secondary text warm-toned (soft #6B5646 light / #D9C3A0 lamp) — never true gray.",
+      "Do keep Dewey's lines true and data-driven (built from real counts/loans/wishlist age), roasting the library, never the reader.",
+      "Do silence Dewey on errors, permission prompts and destructive confirmations; those use plain librarian copy that names the problem and the fix.",
+      "Do cap Dewey's lines at 70 characters and hide them entirely (bubbles, tape-note jokes, toast quips) under the Quiet librarian setting.",
+      "Do collapse the verdict stamp/sticker/Dewey-pop sequence to static, non-scaling end states under reduced motion, while keeping verdict color, copy and haptics."
+    ],
+    "donts": [
+      "Don't introduce a tint, gradient, or lightened/darkened variant of an ink — reach for a different ink or a halftone dot pattern instead.",
+      "Don't give a shape a soft or blurred shadow, an ambient glow, or native elevation — every raised surface in this world uses the hard-offset Raised layer.",
+      "Don't render Gochi Hand on anything pressable; it is reserved for TapeNote alone.",
+      "Don't invent a Dewey line — every line must trace to a real count, duplicate, loan, or wishlist-age value in the context object it's built from.",
+      "Don't use emoji as icons or status markers; the app's only iconography is inline SVG line art (back chevron, close X) or the illustrated components above.",
+      "Don't stack cards inside cards, or build a metric-grid of big-number tiles; use PocketCard + LeaderRow's dotted-leader rows instead.",
+      "Don't place an eyebrow/kicker label over a display headline as a new pattern — the build carries exactly one instance of this (the Shelves greeting over \"My Library\"), and it is a defect this DESIGN.md does not extend into a system rule."
+    ]
+  }
+}
