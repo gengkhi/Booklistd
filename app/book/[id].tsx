@@ -18,7 +18,7 @@ import { TapeNote } from '@/components/ui/TapeNote';
 import { font, ink, radius } from '@/theme/palette';
 import { useTheme } from '@/theme/useTheme';
 
-const daysSince = (iso: string) => Math.max(1, Math.round((Date.now() - new Date(iso.replace(' ', 'T')).getTime()) / 86400000));
+const daysSince = (iso: string) => Math.max(1, Math.round((Date.now() - new Date(iso.replace(' ', 'T') + 'Z').getTime()) / 86400000));
 
 /** Non-interactive status/rating badge — same look as Chip but never a fake button. */
 function Pill({ label, selected }: { label: string; selected?: boolean }) {
@@ -50,8 +50,8 @@ export default function BookDetailScreen() {
   const room = row.location?.trim() || UNSHELVED;
   const neighbours = all.filter((r) => (r.location?.trim() || UNSHELVED) === room && r.status !== 'wishlist');
   const at = neighbours.findIndex((r) => r.id === row.id);
-  const left = neighbours.slice(Math.max(0, at - 3), Math.max(0, at));
-  const right = neighbours.slice(at + 1, at + 4);
+  const left = at === -1 ? [] : neighbours.slice(Math.max(0, at - 3), at);
+  const right = at === -1 ? [] : neighbours.slice(at + 1, at + 4);
   const loaned = copies.find((cp) => cp.borrower);
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['book', id] });
