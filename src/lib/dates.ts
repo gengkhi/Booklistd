@@ -10,7 +10,7 @@ export function greeting(date: Date, lamp: boolean): string {
 
 /** SQLite datetime('now') strings: "YYYY-MM-DD HH:MM:SS". */
 export function wantedSince(iso: string, now: Date): string {
-  const d = new Date(iso.replace(' ', 'T'));
+  const d = new Date(iso.replace(' ', 'T') + 'Z');
   if (Number.isNaN(d.getTime())) return 'WANTED';
-  return d.getFullYear() === now.getFullYear() ? `WANTED SINCE ${MONTHS[d.getMonth()]}` : `WANTED SINCE ${d.getFullYear()}`;
+  return d.getUTCFullYear() === now.getFullYear() ? `WANTED SINCE ${MONTHS[d.getUTCMonth()]}` : `WANTED SINCE ${d.getUTCFullYear()}`;
 }

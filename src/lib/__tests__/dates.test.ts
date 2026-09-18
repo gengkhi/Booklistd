@@ -12,4 +12,8 @@ describe('dates', () => {
     expect(wantedSince('2026-03-02 10:00:00', now)).toBe('WANTED SINCE MAR');
     expect(wantedSince('2022-06-01 10:00:00', now)).toBe('WANTED SINCE 2022');
   });
+  it('treats the stored SQLite string as UTC regardless of machine timezone', () => {
+    const now = new Date(2026, 8, 18);
+    expect(wantedSince('2025-12-31 23:30:00', now)).toBe('WANTED SINCE 2025');
+  });
 });
