@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { listLibrary, libraryStats } from '@/db/repository';
 import { groupByRoom, mostCopied } from '@/features/shelves/groupByRoom';
-import { roomNote, shelvesLines } from '@/features/dewey/lines';
+import { EMPTY_SHELF, roomNote, shelvesLines } from '@/features/dewey/lines';
 import { greeting } from '@/lib/dates';
 import { Bookcase } from '@/components/shelf/Bookcase';
 import { Shelf } from '@/components/shelf/Shelf';
@@ -44,15 +44,18 @@ export default function ShelvesScreen() {
   const loans = stats?.activeLoans ?? 0;
   const sub = total === 0
     ? 'No books yet. The shelves are patient.'
-    : `${total} ${total === 1 ? 'book' : 'books'} on ${rooms.length} ${rooms.length === 1 ? 'shelf' : 'shelves'}${loans ? ` · ${loans} visiting friends` : ''}`;
+    : `${total} ${total === 1 ? 'book' : 'books'} on ${rooms.length} ${rooms.length === 1 ? 'shelf' : 'shelves'}${loans ? ` · ${loans} visiting ${loans === 1 ? 'friend' : 'friends'}` : ''}`;
   const deweyShelf = Math.min(1, Math.max(0, rooms.length - 1));
+  const empty = rooms.length === 0;
+  // Lamplight Dewey dozes, except on an empty library: the empty state always speaks.
+  const asleep = lamp && !empty;
 
   const dewey = (
     <>
       <View style={{ position: 'absolute', right: 16, bottom: 18, zIndex: 5 }}>
-        <Dewey mood={lamp ? 'sleep' : 'happy'} onPress={quiet || lamp ? undefined : () => setLineIdx((i) => i + 1)} />
+        <Dewey mood={asleep ? 'sleep' : 'happy'} onPress={quiet || asleep ? undefined : () => setLineIdx((i) => i + 1)} />
       </View>
-      {!quiet && !lamp ? <Bubble text={line} width={140} style={{ position: 'absolute', right: 12, top: 30, zIndex: 6 }} /> : null}
+      {!quiet && !asleep ? <Bubble text={empty ? EMPTY_SHELF : line} width={140} style={{ position: 'absolute', right: 12, top: 30, zIndex: 6 }} /> : null}
     </>
   );
 
@@ -61,7 +64,7 @@ export default function ShelvesScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
         <ScreenHeader kicker={greeting(new Date(), lamp)} title="My Library" sub={sub} />
         <Bookcase style={{ marginHorizontal: 12, marginTop: 14 }}>
-          {rooms.length === 0 ? (
+          {empty ? (
             <Shelf name="Reserved" count={0} plank={ink.bus} rows={[]} onPressBook={() => {}} reserveRight={DEWEY_ROOM}>
               {dewey}
             </Shelf>
@@ -83,7 +86,7 @@ export default function ShelvesScreen() {
             ))
           )}
         </Bookcase>
-        {rooms.length === 0 ? (
+        {empty ? (
           <View style={{ marginHorizontal: 20, marginTop: 22 }}>
             <Button label="Scan your first book" onPress={() => router.navigate('/scan')} />
           </View>

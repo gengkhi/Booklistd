@@ -3,7 +3,7 @@
  * roasts the library, never the owner. Never used for errors or permissions.
  */
 import { hashString } from '@/features/shelves/spineStyle';
-import type { Room } from '@/features/shelves/groupByRoom';
+import { UNSHELVED, type Room } from '@/features/shelves/groupByRoom';
 
 export const MAX_LINE = 70;
 const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
@@ -26,7 +26,7 @@ export function shelvesLines(ctx: ShelvesContext): string[] {
     out.push(`${countWord(ctx.mostCopied.copies)} copies of ${clip(ctx.mostCopied.title, 22)}. I'm not judging. (I am.)`);
   }
   const big = ctx.rooms[0];
-  if (big && big.count >= 20) {
+  if (big && big.count >= 20 && big.name !== UNSHELVED) {
     out.push(`${big.count} books in the ${clip(big.name.toLowerCase(), 16)}. Guests are impressed. Or worried.`);
   }
   if (ctx.loaned === 1) out.push('One book is out visiting a friend. I miss it.');
@@ -48,7 +48,7 @@ export const newFindLine = (seed: number) => NEW_FIND_LINES[Math.abs(seed) % NEW
 export function wishlistLine(count: number): string {
   if (count === 0) return 'Nothing wished for. Suspiciously content.';
   if (count >= 20) return 'At this rate it needs its own room.';
-  return `${countWord(count)} maybes. Someday is a real day.`;
+  return `${countWord(count)} ${count === 1 ? 'maybe' : 'maybes'}. Someday is a real day.`;
 }
 
 export function searchAside(query: string, ownedMatches: number): string {
@@ -59,7 +59,7 @@ export function searchAside(query: string, ownedMatches: number): string {
   return `No "${q}" on your shelves. Yet.`;
 }
 
-const NOTES = ['the respectable ones', 'do not alphabetize', 'the overflow', 'handle with care', 'the good light', 'mostly finished'];
+const NOTES = ['the respectable ones', 'do not alphabetize', 'the overflow', 'handle with care', 'the good light', 'in no particular order'];
 
 /** Tape note beside a room tag: a true duplicate call-out, otherwise a stable affectionate label. */
 export function roomNote(room: Pick<Room, 'name' | 'rows'>): string {

@@ -1,5 +1,6 @@
 import { shelvesLines, ownedLine, wishlistLine, searchAside, roomNote, newFindLine, EMPTY_SHELF, MAX_LINE, countWord } from '../lines';
 import { row } from '@/test/fixtures';
+import { UNSHELVED } from '@/features/shelves/groupByRoom';
 
 const long = 'An Extraordinarily Long Title That Goes On And On Forever';
 
@@ -19,6 +20,14 @@ describe('Dewey lines', () => {
     expect(lines.some((l) => l.includes('Three books are out visiting friends'))).toBe(true);
     lines.forEach((l) => expect(l.length).toBeLessThanOrEqual(MAX_LINE));
   });
+  it('never calls out the big room when it is the unshelved pile', () => {
+    const lines = shelvesLines({ totalBooks: 24, rooms: [{ name: UNSHELVED, count: 24 }], mostCopied: null, loaned: 0 });
+    expect(lines.some((l) => l.includes('books in the'))).toBe(false);
+  });
+  it('tape notes never claim facts they cannot know', () => {
+    const names = ['Study', 'Bedroom', 'Living room', 'Hall', 'Kitchen', 'Attic', 'Garage', 'Office', 'Den', 'Nook', 'Loft', 'Porch'];
+    names.forEach((name) => expect(roomNote({ name, rows: [row()] })).not.toBe('mostly finished'));
+  });
   it('owned line reflects copies and edition', () => {
     expect(ownedLine(3, true)).toBe("Copy #4? You own three. I've counted.");
     expect(ownedLine(1, true)).toBe('Already yours. Put it back gently.');
@@ -26,6 +35,7 @@ describe('Dewey lines', () => {
   });
   it('wishlist line scales with count', () => {
     expect(wishlistLine(0)).toBe('Nothing wished for. Suspiciously content.');
+    expect(wishlistLine(1)).toBe('One maybe. Someday is a real day.');
     expect(wishlistLine(4)).toBe('Four maybes. Someday is a real day.');
     expect(wishlistLine(27)).toBe('At this rate it needs its own room.');
   });

@@ -19,8 +19,9 @@ export function Stamp({
     }
     if (reduced) {
       t.value = withDelay(delay, withTiming(1, { duration: 1 }));
-      if (onLand) setTimeout(onLand, delay);
-      return;
+      if (!onLand) return;
+      const landing = setTimeout(onLand, delay);
+      return () => clearTimeout(landing);
     }
     t.value = 0;
     t.value = withDelay(

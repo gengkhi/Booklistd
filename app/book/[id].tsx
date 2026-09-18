@@ -7,6 +7,8 @@ import Svg, { Path } from 'react-native-svg';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { getLibraryRow, listCopiesOfBook, listLibrary, listRooms, setLocation, setStatus } from '@/db/repository';
 import { UNSHELVED } from '@/features/shelves/groupByRoom';
+import { invalidateLibrary } from '@/lib/invalidateLibrary';
+import { useSettings } from '@/stores/settings';
 import { CoverArt } from '@/components/shelf/CoverArt';
 import { Spine } from '@/components/shelf/Spine';
 import { Dewey } from '@/components/dewey/Dewey';
@@ -40,6 +42,7 @@ export default function BookDetailScreen() {
   const router = useRouter();
   const qc = useQueryClient();
   const { c } = useTheme();
+  const quiet = useSettings((s) => s.quiet);
   const [moving, setMoving] = useState(false);
   const { data: row } = useQuery({ queryKey: ['book', id], queryFn: () => getLibraryRow(id) });
   const { data: all = [] } = useQuery({ queryKey: ['library'], queryFn: () => listLibrary() });
@@ -53,17 +56,16 @@ export default function BookDetailScreen() {
   const left = at === -1 ? [] : neighbours.slice(Math.max(0, at - 3), at);
   const right = at === -1 ? [] : neighbours.slice(at + 1, at + 4);
   const loaned = copies.find((cp) => cp.borrower);
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: ['book', id] });
-    qc.invalidateQueries({ queryKey: ['library'] });
-    qc.invalidateQueries({ queryKey: ['stats'] });
-  };
+  const loanDays = loaned?.loanedAt ? daysSince(loaned.loanedAt) : 0;
+  const refresh = () => invalidateLibrary(qc);
 
   const primary =
     row.status === 'wishlist'
       ? { label: 'Found it!', run: () => { setStatus(row.id, 'owned'); refresh(); } }
       : loaned
-        ? { label: `Nudge ${loaned.borrower}`, run: () => Share.share({ message: `Hi ${loaned.borrower}! How is ${row.book.title} treating you? No rush. (Some rush.)` }) }
+        ? { label: `Nudge ${loaned.borrower}`, run: () => Share.share({
+            message: `Hi ${loaned.borrower}! How is ${row.book.title} treating you?${quiet ? '' : ' No rush. (Some rush.)'}`,
+          }) }
         : row.status === 'read'
           ? { label: 'Mark as unread', run: () => { setStatus(row.id, 'owned'); refresh(); } }
           : { label: 'Mark as read', run: () => { setStatus(row.id, 'read'); refresh(); } };
@@ -93,10 +95,10 @@ export default function BookDetailScreen() {
         </View>
 
         <View style={{ flexDirection: 'row', gap: 18, paddingHorizontal: 20, paddingTop: 22, alignItems: 'flex-end' }}>
-          <Animated.View entering={FadeInUp.duration(600).withInitialValues({ transform: [{ translateY: -120 }, { scale: 0.5 }] })}>
+          <Animated.View entering={FadeInUp.duration(600).withInitialValues({ transform: [{ translateY: -120 }] })}>
             <View style={{ transform: [{ rotate: '-4deg' }] }}>
               <Raised offset={5} radius={6}>
-                <CoverArt id={row.bookId} title={row.book.title} author={row.book.authors[0]} coverUrl={row.book.coverUrl} width={132} height={196} />
+                <CoverArt id={row.id} title={row.book.title} author={row.book.authors[0]} coverUrl={row.book.coverUrl} width={132} height={196} />
               </Raised>
             </View>
           </Animated.View>
@@ -122,7 +124,7 @@ export default function BookDetailScreen() {
           <View style={{ marginHorizontal: 16, marginTop: 14, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: ink.tape, borderWidth: 2, borderColor: c.line, borderRadius: 10, padding: 10 }}>
             <Dewey size={38} />
             <Text style={{ flex: 1, fontFamily: font.heavy, fontSize: 13, color: ink.brown }}>
-              {`A copy has been visiting ${loaned.borrower} for ${daysSince(loaned.loanedAt)} days.`}
+              {`A copy has been visiting ${loaned.borrower} for ${loanDays} ${loanDays === 1 ? 'day' : 'days'}.`}
             </Text>
           </View>
         ) : null}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +8,7 @@ import { Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900
 import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { getDb } from '@/db/database';
+import { useSettings } from '@/stores/settings';
 import { useTheme } from '@/theme/useTheme';
 
 SplashScreen.preventAutoHideAsync();
@@ -20,15 +21,24 @@ export default function RootLayout() {
     GochiHand_400Regular,
   });
 
+  // Wait for persisted settings too, so a Lamplight user never sees a Daylight flash.
+  const [hydrated, setHydrated] = useState(() => useSettings.persist.hasHydrated());
+  useEffect(() => {
+    const unsub = useSettings.persist.onFinishHydration(() => setHydrated(true));
+    if (useSettings.persist.hasHydrated()) setHydrated(true);
+    return unsub;
+  }, []);
+
   useEffect(() => {
     getDb(); // open + migrate on launch
   }, []);
 
+  const ready = fontsLoaded && hydrated;
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
-  if (!fontsLoaded) return null;
+  if (!ready) return null;
 
   return (
     <QueryProvider>
