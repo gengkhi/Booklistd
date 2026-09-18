@@ -1,47 +1,64 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { libraryStats } from '@/db/repository';
-import { colors, font, radius, shadow, space } from '@/theme/tokens';
+import { libraryStats, listRooms } from '@/db/repository';
+import { Chip } from '@/components/ui/Chip';
+import { LeaderRow, PocketCard } from '@/components/ui/PocketCard';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Dewey } from '@/components/dewey/Dewey';
+import { useSettings } from '@/stores/settings';
+import type { ThemePref } from '@/theme/resolveScheme';
+import { font } from '@/theme/palette';
+import { useTheme } from '@/theme/useTheme';
 
-function CardRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-      <Text style={{ fontFamily: font.bodyBold, fontSize: 12.5, color: colors.inkSoft }}>{label}</Text>
-      <View style={{ flex: 1, borderBottomWidth: 2, borderStyle: 'dotted', borderColor: '#D9C49B', marginHorizontal: 8, marginBottom: 4 }} />
-      <Text style={{ fontFamily: font.display, fontSize: 16, color: colors.ink }}>{value}</Text>
-    </View>
-  );
+const THEMES: { value: ThemePref; label: string }[] = [
+  { value: 'system', label: 'Match phone' },
+  { value: 'light', label: 'Daylight' },
+  { value: 'lamp', label: 'Lamplight' },
+];
+
+function Label({ children }: { children: string }) {
+  const { c } = useTheme();
+  return <Text style={{ fontFamily: font.black, fontSize: 13, color: c.text, marginTop: 24, marginBottom: 10 }}>{children}</Text>;
 }
 
 export default function ProfileScreen() {
+  const { c } = useTheme();
+  const { theme, setTheme, quiet, setQuiet } = useSettings();
   const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: () => libraryStats() });
+  const rooms = listRooms();
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ground }} edges={['top']}>
-      <View style={{ padding: space(4.5), gap: space(3) }}>
-        <Text style={{ fontFamily: font.display, fontSize: 30, color: colors.ink }}>Profile</Text>
-        <View
-          style={{
-            backgroundColor: '#FFF9EA',
-            borderWidth: 1.5,
-            borderColor: '#E4CFA4',
-            borderRadius: radius.lg,
-            padding: space(4.5),
-            gap: space(2.75),
-            ...shadow.warm,
-          }}
-        >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1.5, borderColor: '#E4CFA4', paddingBottom: 9 }}>
-            <Text style={{ fontFamily: font.displaySemi, fontSize: 15, letterSpacing: 1.5, color: colors.ink }}>LIBRARY CARD</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }} edges={['top']}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
+        <ScreenHeader title="Profile" />
+        <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
+          <PocketCard title="Library card">
+            <LeaderRow label="Books on shelves" value={String(stats?.totalBooks ?? 0)} />
+            <LeaderRow label="Rooms" value={String(rooms.length)} />
+            <LeaderRow label="Visiting friends" value={String(stats?.activeLoans ?? 0)} />
+            <LeaderRow label="On the wishlist" value={String(stats?.wishlist ?? 0)} />
+            {stats?.estValue ? <LeaderRow label="Estimated value" value={`$${stats.estValue.toFixed(0)}`} /> : null}
+          </PocketCard>
+
+          <Label>Light</Label>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            {THEMES.map((t) => <Chip key={t.value} label={t.label} selected={theme === t.value} onPress={() => setTheme(t.value)} />)}
           </View>
-          <CardRow label="Books owned" value={String(stats?.totalBooks ?? 0)} />
-          <CardRow label="Estimated value" value={`$${(stats?.estValue ?? 0).toFixed(0)}`} />
+
+          <Label>Dewey</Label>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Dewey mood={quiet ? 'sleep' : 'happy'} size={48} />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Chip label="Chatty" selected={!quiet} onPress={() => setQuiet(false)} />
+              <Chip label="Quiet librarian" selected={quiet} onPress={() => setQuiet(true)} />
+            </View>
+          </View>
+          <Text style={{ fontFamily: font.bold, fontSize: 13, color: c.soft, marginTop: 8 }}>
+            Quiet hides Dewey's remarks and the shelf notes. Room names and counts stay.
+          </Text>
         </View>
-        <Text style={{ fontFamily: font.body, fontSize: 12.5, color: colors.muted }}>
-          Phase 3 lands here: sign in with Apple/Google, backup and sync, CSV import/export, Lamplight mode.
-        </Text>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
