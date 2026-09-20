@@ -1,5 +1,5 @@
 ---
-name: My Library — Painted Bookcase
+name: Booklistd — Painted Bookcase
 description: A hand-painted picture-book bookcase where every owned book is a spine, kept by Dewey the bookworm.
 colors:
   paper: "#FBFAF4"
@@ -105,13 +105,13 @@ components:
     height: "96-122px"
 ---
 
-# Design System: My Library — Painted Bookcase
+# Design System: Booklistd — Painted Bookcase
 
 ## Overview
 
 **Creative North Star: "Book Fair Saturday"** — a children's-library picture book, grown up.
 
-My Library is a hand-painted bookcase, not a cover grid. Every copy a reader owns renders as its own standing spine — colored, outlined, sized and patterned deterministically from the copy's database id, so the same book always wears the same spine. Shelves are rooms; a plank of color carries a room tag pill and a handwritten tape note. Dewey, a small SVG bookworm, sits on one shelf and says one true, dry, data-driven thing about the library — never about the owner. The whole world runs on six fixed inks plus paper, 2–2.5px outlines, and hard offset shadows with no blur; nothing is a tint, a gradient, or a soft glow. This is Operate register (PRODUCT.md): the redesign's charm lives in precise, reliable details — the Store Mode verdict, the pocket card, the shelf props — never at the expense of scan speed or legibility.
+Booklistd is a hand-painted bookcase, not a cover grid. Every copy a reader owns renders as its own standing spine — colored, outlined, sized and patterned deterministically from the copy's database id, so the same book always wears the same spine. Shelves are rooms; a plank of color carries a room tag pill and a handwritten tape note. Dewey, a small SVG bookworm, sits on one shelf and says one true, dry, data-driven thing about the library — never about the owner. The whole world runs on six fixed inks plus paper, 2–2.5px outlines, and hard offset shadows with no blur; nothing is a tint, a gradient, or a soft glow. This is Operate register (PRODUCT.md): the redesign's charm lives in precise, reliable details — the Store Mode verdict, the pocket card, the shelf props — never at the expense of scan speed or legibility.
 
 The build replaces "Reading nook at golden hour" (cream + Fraunces + clay + soft warm shadows) outright. Nothing from that world survives except the underlying data model; palette, type, shadow language and signature components are new from the ground up.
 
@@ -252,4 +252,4 @@ An SVG bookworm (three stacked green circles, white eye-patches, ink outline) wi
 - **Don't** invent a Dewey line — every line must trace to a real count, duplicate, loan, or wishlist-age value in the context object it's built from.
 - **Don't** use emoji as icons or status markers; the app's only iconography is inline SVG line art (back chevron, close X) or the illustrated components above.
 - **Don't** stack cards inside cards, or build a metric-grid of big-number tiles; use `PocketCard` + `LeaderRow`'s dotted-leader rows instead.
-- **Don't** place an eyebrow/kicker label over a display headline as a new pattern — the build carries exactly one instance of this (the Shelves greeting over "My Library"), and it is a defect this DESIGN.md does not extend into a system rule. See the finish notes.
+- **Don't** place an eyebrow/kicker label over a display headline as a new pattern — the build carries exactly one instance of this (the Shelves greeting over "Booklistd"), and it is a defect this DESIGN.md does not extend into a system rule. See the finish notes.

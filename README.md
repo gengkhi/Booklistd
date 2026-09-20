@@ -1,4 +1,4 @@
-# My Library
+# Booklistd
 
 Personal book cataloging for iOS + Android, with a Store Mode scanner that tells you
 **instantly and offline** whether you already own the book in your hand.

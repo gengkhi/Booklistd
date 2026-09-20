@@ -62,7 +62,7 @@ export default function ShelvesScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
-        <ScreenHeader kicker={greeting(new Date(), lamp)} title="My Library" sub={sub} />
+        <ScreenHeader kicker={greeting(new Date(), lamp)} title="Booklistd" sub={sub} />
         <Bookcase style={{ marginHorizontal: 12, marginTop: 14 }}>
           {empty ? (
             <Shelf name="Reserved" count={0} plank={ink.bus} rows={[]} onPressBook={() => {}} reserveRight={DEWEY_ROOM}>

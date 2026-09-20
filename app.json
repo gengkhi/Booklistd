@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "My Library",
-    "slug": "my-library",
+    "name": "Booklistd",
+    "slug": "booklistd",
     "version": "0.1.0",
-    "scheme": "mylibrary",
+    "scheme": "booklistd",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.sean.mylibrary",
+      "bundleIdentifier": "com.sean.booklistd",
       "supportsTablet": false,
       "infoPlist": {
-        "NSCameraUsageDescription": "My Library uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
+        "NSCameraUsageDescription": "Booklistd uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
       }
     },
     "android": {
-      "package": "com.sean.mylibrary",
+      "package": "com.sean.booklistd",
       "permissions": ["CAMERA"],
       "edgeToEdgeEnabled": true
     },
@@ -26,7 +26,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "My Library uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
+          "cameraPermission": "Booklistd uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
         }
       ]
     ],

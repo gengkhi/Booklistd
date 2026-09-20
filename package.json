@@ -1,5 +1,5 @@
 {
-  "name": "my-library",
+  "name": "booklistd",
   "version": "0.1.0",
   "main": "expo-router/entry",
   "private": true,

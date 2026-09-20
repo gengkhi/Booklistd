@@ -1,4 +1,4 @@
-# PRODUCT.md — My Library
+# PRODUCT.md — Booklistd
 
 ## What this is
 A personal digital library app (iOS + Android, one Expo/React Native codebase) where people catalog every book they physically own — and, in a bookstore, know in under a second whether they already own the book in their hand.

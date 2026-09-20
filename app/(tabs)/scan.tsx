@@ -121,7 +121,7 @@ export default function ScanScreen() {
         <View style={{ position: 'absolute', top: insets.top + 8, left: 16 }}><CloseButton onPress={close} /></View>
         <Text style={{ fontFamily: font.display, fontSize: 32, lineHeight: 36, color: ink.white }}>Point, scan, know instantly</Text>
         <Text style={{ fontFamily: font.bold, fontSize: 15, lineHeight: 21, color: palettes.lamp.soft, marginTop: 10 }}>
-          My Library needs the camera to read book barcodes. Nothing is recorded or uploaded.
+          Booklistd needs the camera to read book barcodes. Nothing is recorded or uploaded.
         </Text>
         <View style={{ marginTop: 24 }}>
           {permission.canAskAgain ? (
