@@ -6,7 +6,6 @@
     "scheme": "booklistd",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.sean.booklistd",
       "supportsTablet": false,
@@ -16,8 +15,7 @@
     },
     "android": {
       "package": "com.sean.booklistd",
-      "permissions": ["CAMERA"],
-      "edgeToEdgeEnabled": true
+      "permissions": ["CAMERA"]
     },
     "plugins": [
       "expo-router",
@@ -27,6 +25,14 @@
         "expo-camera",
         {
           "cameraPermission": "Booklistd uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Booklistd uses your photo library so you can pick a cover photo for a book.",
+          "cameraPermission": "Booklistd uses the camera to scan book barcodes and to photograph book covers.",
+          "microphonePermission": false
         }
       ]
     ],

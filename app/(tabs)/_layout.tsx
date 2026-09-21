@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, type ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { font, ink } from '@/theme/palette';
@@ -12,7 +12,7 @@ const ICONS: Record<string, string> = {
   profile: 'M4 21c1-4 4-6 8-6s7 2 8 6',
 };
 
-function TabIcon({ name, color }: { name: string; color: string }) {
+function TabIcon({ name, color }: { name: string; color: ColorValue }) {
   return (
     <Svg width={24} height={24} fill="none" stroke={color} strokeWidth={2.2}>
       {name === 'search' ? <Circle cx={11} cy={11} r={6} /> : null}
