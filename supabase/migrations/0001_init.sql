@@ -1,10 +1,9 @@
 -- My Library — initial schema. Run in the Supabase SQL editor (or `supabase db push`).
 
-create extension if not exists "uuid-ossp";
 
 -- Shared catalog: written only by the book-lookup edge function (service role).
 create table public.books (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   isbn13 text unique,
   isbn10 text,
   title text not null,
@@ -114,12 +113,12 @@ create policy "books are readable" on public.books
 
 -- Per-user tables: owner-only, all operations.
 create policy "own user_books" on public.user_books
-  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create policy "own shelves" on public.shelves
-  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create policy "own shelf_books" on public.shelf_books
-  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create policy "own loans" on public.loans
-  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create policy "own profile" on public.profiles
-  for all to authenticated using (id = auth.uid()) with check (id = auth.uid());
+  for all to authenticated using (id = (select auth.uid())) with check (id = (select auth.uid()));

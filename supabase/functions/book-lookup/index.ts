@@ -56,7 +56,8 @@ async function cache(admin: ReturnType<typeof createClient>, meta: Record<string
     .from('books')
     .upsert(
       {
-        isbn13: meta.isbn13, title: meta.title, subtitle: meta.subtitle, authors: meta.authors,
+        isbn13: meta.isbn13, isbn10: meta.isbn10 ?? null,
+        title: meta.title, subtitle: meta.subtitle, authors: meta.authors,
         publisher: meta.publisher, published_year: meta.publishedYear, edition: meta.edition,
         genres: meta.genres, page_count: meta.pageCount, cover_url: meta.coverUrl,
         description: meta.description, work_key: meta.workKey, source: meta.source,
@@ -93,7 +94,9 @@ async function fromOpenLibrary(isbn: string) {
   const ed = await res.json();
   if (!ed?.title) return null;
   return {
-    isbn13: isbn, title: ed.title, subtitle: ed.subtitle ?? null, authors: [],
+    isbn13: isbn, isbn10: ed.isbn_10?.[0] ?? null,
+    title: ed.title, subtitle: ed.subtitle ?? null,
+    authors: await resolveAuthors(ed),
     publisher: ed.publishers?.[0] ?? null,
     publishedYear: ed.publish_date ? Number(String(ed.publish_date).match(/\d{4}/)?.[0]) || null : null,
     edition: ed.edition_name ?? null, genres: [], pageCount: ed.number_of_pages ?? null,
@@ -102,4 +105,55 @@ async function fromOpenLibrary(isbn: string) {
     workKey: ed.works?.[0]?.key ?? `local:${String(ed.title).toLowerCase()}|`,
     source: 'openlibrary',
   };
+}
+
+/**
+ * Open Library edition records carry authors as key refs ({ key: "/authors/OL79034A" }),
+ * not names, so each needs a second fetch. Resolves all of them in parallel and falls
+ * back to by_statement ("Frank Herbert.") when the refs are missing or unresolvable —
+ * an authorless row would otherwise be cached into the shared catalog permanently.
+ */
+async function resolveAuthors(ed: Record<string, any>): Promise<string[]> {
+  let keys: string[] = Array.isArray(ed.authors)
+    ? ed.authors.map((a: { key?: string }) => a?.key).filter(Boolean)
+    : [];
+
+  // Mass-market editions often carry no edition-level authors; the work record
+  // holds them instead, nested one level deeper as authors[].author.key.
+  if (!keys.length && ed.works?.[0]?.key) {
+    try {
+      const r = await fetch(`https://openlibrary.org${ed.works[0].key}.json`);
+      if (r.ok) {
+        const work = await r.json();
+        keys = Array.isArray(work?.authors)
+          ? work.authors.map((a: { author?: { key?: string } }) => a?.author?.key).filter(Boolean)
+          : [];
+      }
+    } catch {
+      // fall through to by_statement
+    }
+  }
+
+  if (keys.length) {
+    const names = await Promise.all(
+      keys.map(async (key) => {
+        try {
+          const r = await fetch(`https://openlibrary.org${key}.json`);
+          if (!r.ok) return null;
+          const a = await r.json();
+          return typeof a?.name === 'string' ? a.name : null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const resolved = names.filter((n): n is string => !!n);
+    if (resolved.length) return resolved;
+  }
+
+  if (typeof ed.by_statement === 'string') {
+    const cleaned = ed.by_statement.replace(/\.$/, '').trim();
+    if (cleaned) return [cleaned];
+  }
+  return [];
 }
