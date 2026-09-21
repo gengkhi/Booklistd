@@ -1,6 +1,6 @@
 import { shelvesLines, ownedLine, wishlistLine, searchAside, roomNote, newFindLine, EMPTY_SHELF, MAX_LINE, countWord } from '../lines';
 import { row } from '@/test/fixtures';
-import { UNSHELVED } from '@/features/shelves/groupByRoom';
+import { UNSHELVED } from '@/features/shelves/shelfRules';
 
 const long = 'An Extraordinarily Long Title That Goes On And On Forever';
 

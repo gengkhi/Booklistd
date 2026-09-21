@@ -2,9 +2,13 @@
  * Local SQLite schema — the device is the source of truth; Supabase is sync/backup.
  * Mirror of supabase/migrations/0001_init.sql (minus RLS). Version every change.
  */
-export const SCHEMA_VERSION = 2;
+import type { SQLiteDatabase } from 'expo-sqlite';
+import { migrateV3ReadingTracking } from './migrations/v3ReadingTracking';
+import { migrateV4ShelfCreation } from './migrations/v4ShelfCreation';
 
-export const MIGRATIONS: string[] = [
+export const SCHEMA_VERSION = 4;
+
+export const MIGRATIONS: (string | ((d: SQLiteDatabase) => void))[] = [
   // v1 — initial
   `
   CREATE TABLE IF NOT EXISTS books (
@@ -122,4 +126,8 @@ export const MIGRATIONS: string[] = [
          (e.book_id IS NOT NULL) AS edited
     FROM books b LEFT JOIN book_edits e ON e.book_id = b.id;
   `,
+  // v3 — reading tracking (JS: reuses the tested legacy mapping). See src/db/migrations/v3ReadingTracking.ts.
+  migrateV3ReadingTracking,
+  // v4 — shelves are places: shelves.plank, user_books.shelf_id; location retired. See src/db/migrations/v4ShelfCreation.ts.
+  migrateV4ShelfCreation,
 ];

@@ -11,9 +11,10 @@ Book owners with 50–2,000+ physical books: rereaders, collectors, families wit
 2. Search — my shelves first, then the catalog
 3. Know immediately if I own it (Store Mode verdict)
 4. Add a book in one tap
+5. Track reading separately from owning — Want to read, Reading, Read, Did not finish — so a library read still counts and a wishlist stays about owning
 
 ## Killer feature — Store Mode
-Walk a bookstore scanning continuously. Each scan answers offline, from local SQLite, in <150ms: **You own this!** (copies, edition scanned vs. owned, shelf location, status) or **A new find!** (one-tap Add to Library / Add to Wishlist). Cross-edition duplicate warning when the ISBN differs but the work matches.
+Walk a bookstore scanning continuously. Each scan answers offline, from local SQLite, in <150ms, with one of four verdicts: **You own this!** (copies, edition scanned vs. owned, shelf location) · **Found one!** (it's on your wishlist) · **You've read this** (read before, not on your shelves) · **A new find!** (one-tap Add to Library / Add to Wishlist). Cross-edition duplicate warning when the ISBN differs but the work matches.
 
 ## Register / mode (Impeccable)
 Operate. Reliability, scanability, native affordances first; the brand lives in precise details (Store Mode verdict, library card, shelf props). Platform: adaptive (React Native — iOS + Android).

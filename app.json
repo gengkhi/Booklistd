@@ -15,7 +15,9 @@
     },
     "android": {
       "package": "com.sean.booklistd",
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -34,8 +36,11 @@
           "cameraPermission": "Booklistd uses the camera to scan book barcodes and to photograph book covers.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

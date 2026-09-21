@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -45,11 +46,14 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <QueryProvider>
-      <StatusBar style={scheme === 'lamp' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.paper } }}>
-        <Stack.Screen name="book/edit" options={{ presentation: 'modal' }} />
-      </Stack>
-    </QueryProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryProvider>
+        <StatusBar style={scheme === 'lamp' ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.paper } }}>
+          <Stack.Screen name="book/edit" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="shelves" />
+        </Stack>
+      </QueryProvider>
+    </GestureHandlerRootView>
   );
 }

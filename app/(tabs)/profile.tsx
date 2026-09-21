@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { libraryStats, listRooms } from '@/db/repository';
+import { libraryStats, listShelves } from '@/db/repository';
 import { Chip } from '@/components/ui/Chip';
 import { LeaderRow, PocketCard } from '@/components/ui/PocketCard';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -27,7 +27,7 @@ export default function ProfileScreen() {
   const { c } = useTheme();
   const { theme, setTheme, quiet, setQuiet } = useSettings();
   const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: () => libraryStats() });
-  const rooms = listRooms();
+  const { data: shelves = [] } = useQuery({ queryKey: ['shelves'], queryFn: () => listShelves() });
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
@@ -35,7 +35,7 @@ export default function ProfileScreen() {
         <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
           <PocketCard title="Library card">
             <LeaderRow label="Books on shelves" value={String(stats?.totalBooks ?? 0)} />
-            <LeaderRow label="Rooms" value={String(rooms.length)} />
+            <LeaderRow label="Shelves" value={String(shelves.length)} />
             <LeaderRow label="Visiting friends" value={String(stats?.activeLoans ?? 0)} />
             <LeaderRow label="On the wishlist" value={String(stats?.wishlist ?? 0)} />
             {stats?.estValue ? <LeaderRow label="Estimated value" value={`$${stats.estValue.toFixed(0)}`} /> : null}
@@ -55,7 +55,7 @@ export default function ProfileScreen() {
             </View>
           </View>
           <Text style={{ fontFamily: font.bold, fontSize: 13, color: c.soft, marginTop: 8 }}>
-            Quiet hides Dewey's remarks and the shelf notes. Room names and counts stay.
+            Quiet hides Dewey's remarks and the shelf notes. Shelf names and counts stay.
           </Text>
         </View>
       </ScrollView>

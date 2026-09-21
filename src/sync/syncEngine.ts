@@ -33,4 +33,8 @@ export async function pullChanges(): Promise<void> {
   if (!supabaseConfigured) return;
   // TODO(Phase 3): pull user_books/shelves/loans where updated_at > cursor,
   // apply with LWW against local updated_at, then advance sync_meta.pull_cursor.
+  // Readings are backfilled on both server and device with different ids — push readings with
+  // onConflict: 'user_id,book_id' (or skip the server backfill when the server has no rows) so the
+  // unique (user_id, book_id) constraint doesn't block the queue.
+  // shelves: the server backfill (20260922000000) creates its own shelf ids — match shelves on (user_id, lower(trim(name))) when wiring push/pull so the device's shelves don't duplicate them.
 }

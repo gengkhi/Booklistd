@@ -3,7 +3,7 @@
  * roasts the library, never the owner. Never used for errors or permissions.
  */
 import { hashString } from '@/features/shelves/spineStyle';
-import { UNSHELVED, type Room } from '@/features/shelves/groupByRoom';
+import { UNSHELVED, type ShelfGroup } from '@/features/shelves/shelfRules';
 
 export const MAX_LINE = 70;
 const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
@@ -62,7 +62,7 @@ export function searchAside(query: string, ownedMatches: number): string {
 const NOTES = ['the respectable ones', 'do not alphabetize', 'the overflow', 'handle with care', 'the good light', 'in no particular order'];
 
 /** Tape note beside a room tag: a true duplicate call-out, otherwise a stable affectionate label. */
-export function roomNote(room: Pick<Room, 'name' | 'rows'>): string {
+export function roomNote(room: Pick<ShelfGroup, 'name' | 'rows'>): string {
   const byBook = new Map<string, { title: string; n: number }>();
   for (const r of room.rows) {
     const e = byBook.get(r.bookId) ?? { title: r.book.title, n: 0 };

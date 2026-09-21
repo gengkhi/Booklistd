@@ -42,9 +42,10 @@ describe('nextRating', () => {
 
 describe('shouldPromptRating', () => {
   it('prompts only when a book becomes read', () => {
-    expect(shouldPromptRating('owned', 'read')).toBe(true);
+    expect(shouldPromptRating(null, 'read')).toBe(true);
     expect(shouldPromptRating('reading', 'read')).toBe(true);
     expect(shouldPromptRating('read', 'read')).toBe(false);
-    expect(shouldPromptRating('read', 'owned')).toBe(false);
+    expect(shouldPromptRating('read', 'want')).toBe(false);
+    expect(shouldPromptRating('reading', 'dnf')).toBe(false);
   });
 });

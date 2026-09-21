@@ -10,15 +10,15 @@ import { useScanPipeline } from '@/features/scanner/useScanPipeline';
 import { ScanViewfinder } from '@/features/scanner/ScanViewfinder';
 import { VerdictSheet } from '@/features/scanner/VerdictSheet';
 import {
-  addUserBook, findBookByIsbn, findWishlistCopy, libraryStats, listRooms, setLocation, setStatus, upsertBook,
+  addUserBook, findBookByIsbn, libraryStats, listShelves, removeCopy, setCopyShelf, setReadingState, setStatus, upsertBook,
 } from '@/db/repository';
+import { UNSHELVED } from '@/features/shelves/shelfRules';
 import { invalidateLibrary } from '@/lib/invalidateLibrary';
 import { Button } from '@/components/ui/Button';
 import { Toast } from '@/components/ui/Toast';
 import { useSettings } from '@/stores/settings';
 import { font, ink, palettes, radius } from '@/theme/palette';
 
-const DEFAULT_ROOMS = ['Living room', 'Bedroom', 'Study'];
 const SCENE = ink.sceneDark;
 
 function CloseButton({ onPress }: { onPress: () => void }) {
@@ -41,10 +41,9 @@ export default function ScanScreen() {
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const busyRef = useRef(false);
-  const rooms = useMemo(() => {
-    const r = listRooms();
-    return r.length ? r : DEFAULT_ROOMS;
-  }, [current?.isbn13]); // refresh when a new book is scanned
+  const [shelfVersion, setShelfVersion] = useState(0);
+  const shelves = useMemo(() => listShelves(), [current?.isbn13, shelfVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shelfName = (id: string | null) => shelves.find((s) => s.id === id)?.name ?? UNSHELVED;
 
   // The camera only lives while Store Mode is on screen; each visit starts a fresh session.
   useFocusEffect(
@@ -64,10 +63,7 @@ export default function ScanScreen() {
   }, [getPermission]);
 
   // Scanning a book that's already on the Someday shelf: adding it moves that copy instead of duplicating it.
-  const wishCopy = useMemo(
-    () => (current && !current.verdict.owned && current.verdict.book ? findWishlistCopy(current.verdict.book.id) : null),
-    [current?.isbn13, current?.verdict] // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const wishCopy = current && !current.verdict.owned ? current.verdict.wishlistCopies[0] ?? null : null;
 
   // A new scan (or dismissal back to no current book) clears the double-tap guard.
   useEffect(() => {
@@ -82,41 +78,62 @@ export default function ScanScreen() {
 
   const close = () => router.navigate('/');
 
-  const addAs = (status: 'owned' | 'wishlist', room: string | null) => {
-    if (!current || busyRef.current) return;
-    busyRef.current = true;
-    const { meta, isbn13 } = current;
-    let message: string;
-    if (status === 'owned' && wishCopy) {
-      setStatus(wishCopy.id, 'owned');
-      setLocation(wishCopy.id, room);
-      message = `Moved off the Someday shelf. Shelved in ${room ?? 'Unshelved'}.`;
-    } else {
-      // Always the scanned edition — on a work match verdict.book is the sibling edition already owned.
-      const book =
-        (meta ? upsertBook(meta) : findBookByIsbn(isbn13)) ??
-        upsertBook({
-          isbn13, isbn10: null, title: `ISBN ${isbn13}`, subtitle: null, authors: [], publisher: null, publishedYear: null,
-          edition: null, genres: [], pageCount: null, coverUrl: null, description: null, workKey: null, source: 'manual',
-        });
-      addUserBook(book.id, status, status === 'owned' ? room ?? undefined : undefined);
-      message =
-        status === 'owned'
-          ? `Shelved in ${room ?? 'Unshelved'}. Book #${libraryStats().totalBooks}.`
-          : quiet ? 'Added to your wishlist.' : 'Wishlisted. The Someday shelf grows.';
-    }
-    invalidateLibrary(qc);
-    dismiss();
+  const showToast = (message: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(message);
     toastTimer.current = setTimeout(() => setToast(null), 1800);
   };
 
-  const addDetails = (room: string | null) => {
+  /** The scanned edition as a catalog row (placeholder when no catalog knew it). */
+  const scannedBook = () => {
+    const { meta, isbn13 } = current!;
+    return (
+      (meta ? upsertBook(meta) : findBookByIsbn(isbn13)) ??
+      upsertBook({
+        isbn13, isbn10: null, title: `ISBN ${isbn13}`, subtitle: null, authors: [], publisher: null, publishedYear: null,
+        edition: null, genres: [], pageCount: null, coverUrl: null, description: null, workKey: null, source: 'manual',
+      })
+    );
+  };
+
+  const addAs = (status: 'owned' | 'wishlist', shelfId: string | null) => {
+    if (!current || busyRef.current) return;
+    busyRef.current = true;
+    let message: string;
+    // Always the scanned edition — on a work match verdict.book is the sibling edition already owned.
+    const bookId = scannedBook().id;
+    if (status === 'owned' && wishCopy && wishCopy.bookId === bookId) {
+      setStatus(wishCopy.id, 'owned');
+      setCopyShelf(wishCopy.id, shelfId);
+      message = `Moved off the Someday shelf. Shelved in ${shelfName(shelfId)}.`;
+    } else {
+      addUserBook(bookId, status, status === 'owned' ? shelfId : null);
+      // Another edition's wishlist copy is fulfilled by this one; never relabel it as the wrong edition.
+      if (status === 'owned' && wishCopy) removeCopy(wishCopy.id);
+      message =
+        status === 'owned'
+          ? `Shelved in ${shelfName(shelfId)}. Book #${libraryStats().totalBooks}.`
+          : quiet ? 'Added to your wishlist.' : 'Wishlisted. The Someday shelf grows.';
+    }
+    invalidateLibrary(qc);
+    dismiss();
+    showToast(message);
+  };
+
+  const wantToRead = () => {
+    if (!current || busyRef.current) return;
+    busyRef.current = true;
+    setReadingState(scannedBook().id, 'want');
+    invalidateLibrary(qc);
+    dismiss();
+    showToast('On your TBR pile.');
+  };
+
+  const addDetails = (shelfId: string | null) => {
     if (!current) return;
     const isbn = current.isbn13;
     dismiss();
-    router.push({ pathname: '/book/edit', params: room ? { isbn, room } : { isbn } });
+    router.push({ pathname: '/book/edit', params: shelfId ? { isbn, shelfId } : { isbn } });
   };
 
   const statusBar = focused ? <StatusBar style="light" /> : null;
@@ -170,7 +187,7 @@ export default function ScanScreen() {
         ) : null}
       </View>
       {current ? (
-        <VerdictSheet key={current.isbn13} result={current} rooms={rooms} quiet={quiet} wishlisted={!!wishCopy} onKeepScanning={dismiss} onAdd={addAs} onAddDetails={addDetails} />
+        <VerdictSheet key={current.isbn13} result={current} shelves={shelves} quiet={quiet} onKeepScanning={dismiss} onAdd={addAs} onAddDetails={addDetails} onWantToRead={wantToRead} onShelvesChanged={() => { setShelfVersion((v) => v + 1); invalidateLibrary(qc); }} />
       ) : null}
       <Toast text={toast} />
     </View>

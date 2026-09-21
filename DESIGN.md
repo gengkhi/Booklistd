@@ -111,7 +111,7 @@ components:
 
 **Creative North Star: "Book Fair Saturday"** — a children's-library picture book, grown up.
 
-Booklistd is a hand-painted bookcase, not a cover grid. Every copy a reader owns renders as its own standing spine — colored, outlined, sized and patterned deterministically from the copy's database id, so the same book always wears the same spine. Shelves are rooms; a plank of color carries a room tag pill and a handwritten tape note. Dewey, a small SVG bookworm, sits on one shelf and says one true, dry, data-driven thing about the library — never about the owner. The whole world runs on six fixed inks plus paper, 2–2.5px outlines, and hard offset shadows with no blur; nothing is a tint, a gradient, or a soft glow. This is Operate register (PRODUCT.md): the redesign's charm lives in precise, reliable details — the Store Mode verdict, the pocket card, the shelf props — never at the expense of scan speed or legibility.
+Booklistd is a hand-painted bookcase, not a cover grid. Every copy a reader owns renders as its own standing spine — colored, outlined, sized and patterned deterministically from the copy's database id, so the same book always wears the same spine. Shelves are places you create; each keeps a saved plank of colour, carrying a room tag pill and a handwritten tape note. Dewey, a small SVG bookworm, sits on one shelf and says one true, dry, data-driven thing about the library — never about the owner. The whole world runs on six fixed inks plus paper, 2–2.5px outlines, and hard offset shadows with no blur; nothing is a tint, a gradient, or a soft glow. This is Operate register (PRODUCT.md): the redesign's charm lives in precise, reliable details — the Store Mode verdict, the pocket card, the shelf props — never at the expense of scan speed or legibility.
 
 The build replaces "Reading nook at golden hour" (cream + Fraunces + clay + soft warm shadows) outright. Nothing from that world survives except the underlying data model; palette, type, shadow language and signature components are new from the ground up.
 
@@ -132,7 +132,7 @@ Six fixed inks plus paper and brown; no tints, no gradients. Extra tone comes fr
 
 ### Secondary
 - **Tomato** (`#E2462B`): stamps (ALREADY YOURS, WANTED SINCE…), the pocket card's top rule, book-detail's "you are here" plank, verdict emphasis.
-- **Pool Blue** (`#2F6FB0`): the most common spine/plank color, one of the shelf plank rotation colors.
+- **Pool Blue** (`#2F6FB0`): the most common spine/plank color, one of the shelf plank colors.
 - **Grass Green** (`#3E9A5A`): the "You own this!" verdict sheet, Dewey's body fill, read-status accents.
 - **Plum** (`#7B3F6E`): the wishlist/Someday shelf plank, a spine swatch, wishlist stamps.
 
@@ -178,7 +178,7 @@ Lamplight is not an inverted light scheme; it recolors the frame and reweights t
 
 ## Layout
 
-4pt spacing grid (`space(n) = n × 4px`); 16–20px screen gutters; touch targets ≥44pt. Screens are a `SafeAreaView` + vertical `ScrollView`; the Shelves tab's bookcase is a single full-width panel holding one horizontally-scrolling, virtualized shelf per room (`FlatList`, `initialNumToRender={12}`), so a 500-book room scrolls instead of paginating. The tab bar carries a raised, circular Scan sticker as the center primary action, off the shared tab baseline.
+4pt spacing grid (`space(n) = n × 4px`); 16–20px screen gutters; touch targets ≥44pt. Screens are a `SafeAreaView` + vertical `ScrollView`; the Shelves tab's bookcase is a single full-width panel holding one horizontally-scrolling, virtualized shelf row per shelf (`FlatList`, `initialNumToRender={12}`), so a 500-book shelf scrolls instead of paginating. The tab bar carries a raised, circular Scan sticker as the center primary action, off the shared tab baseline.
 
 ## Elevation & Depth
 
@@ -225,7 +225,7 @@ Five-tab bar (Shelves · Search · Scan · Wishlist · Profile); Scan is a raise
 An outlined rectangle whose width (26–36px), height (96–122px) and fill/pattern (plain, band, or halftone dots from an 8-swatch set) are all derived deterministically (FNV-1a hash) from the copy's database id — so a given copy always renders the same spine, and the Book detail cover pulled for that copy shares its fill/accent colors. Every bookcase spine shows its title, rotated 90°, Figtree Black 10.5px, one line with an ellipsis; on dotted spines the title sits on a plain strip of the spine color. Mini spines (search, wishlist) stay untitled. Press lifts the spine −8px over 120ms; the last spine on a shelf of 4+ leans −10°.
 
 ### Shelf / Bookcase (signature)
-A `Shelf` is a horizontally virtualized row of spines standing on a colored plank (one of five rotating plank colors), with a room-tag pill (name · count) and an optional rotated tape note at top-left. A `Bookcase` is the outlined, `Raised`-shadowed panel that holds one `Shelf` per room, with exactly one prop (a two-tone `Plant` SVG) at the end of the first shelf.
+A `Shelf` is a horizontally virtualized row of spines standing on its saved colored plank (one of five plank colors), with a room-tag pill (name · count) and an optional rotated tape note at top-left. A `Bookcase` is the outlined, `Raised`-shadowed panel that holds one `Shelf` for each shelf, with exactly one prop (a two-tone `Plant` SVG) at the end of the first shelf.
 
 ### Stamp / Sticker (signature)
 `Stamp` renders rubber-stamp verdict copy (ALREADY YOURS, WANTED SINCE…) that slams onto the verdict card: scale 2.4→0.92→1.04→1 with rotation −22°→−8°→−9° over 420ms, firing a heavy haptic and a small card shake on impact. `Sticker` is its "new find" counterpart — a yellow circle that spring-slaps into place. Both are `pointerEvents="none"`, decorative-over-content, and both collapse to a static end state under reduced motion.
@@ -233,11 +233,19 @@ A `Shelf` is a horizontally virtualized row of spines standing on a colored plan
 ### Dewey (signature)
 An SVG bookworm (three stacked green circles, white eye-patches, ink outline) with four moods — happy, smug, gasp, sleep — plus seven rating faces (see Dewey ratings below), and a spring "pop" entrance (`popSpring`: damping 9, stiffness 180, mass 0.7) used on the Shelves shelf and the verdict sheet. Sleep mood draws a drifting "z". Speaks through `Bubble` (white, outlined, `Raised`-shadowed, `ZoomIn` on text change) using lines from `src/features/dewey/lines.ts` — see the wit contract in Do's and Don'ts.
 
-**Lookup failed.** When no catalog knows the ISBN, the sheet heading reads "We couldn't find this one." (no Dewey, no bubble — it's an error state). Primary action "Add details" opens the edit form (`/book/edit?isbn=…&room=…`), which shelves the copy on save; the link "Add with just the ISBN" keeps the old one-tap placeholder add.
+**Lookup failed.** When no catalog knows the ISBN, the sheet heading reads "We couldn't find this one." (no Dewey, no bubble — it's an error state). Primary action "Add details" opens the edit form (`/book/edit?isbn=…&shelfId=…`), which shelves the copy on save; the link "Add with just the ISBN" keeps the old one-tap placeholder add.
 
 **Edit details form.** Modal route `/book/edit`. Cover slot on top (Take photo / Choose from library / Remove photo, cropped 2:3, stored on-device at ~600px JPEG), then Title (required) and Authors (comma-separated); Subtitle, Publisher, Year and Edition sit behind "More details". Edits override catalog data per field and never replace it — "Reset to catalog" removes them. Book detail shows an "Edited by you" pill and, for placeholder titles or books with no author, a "Missing details" nudge.
 
-**Dewey ratings.** A copy's rating is one of seven Dewey reactions, stored as 1–7 in `user_books.rating`: 1 Put me to sleep (drifting z's) · 2 Meh. (eye-roll) · 3 Had its moments (head tilt) · 4 Good company (happy bounce + blush) · 5 Couldn't put it down (sparkle burst) · 6 Wrecked me (nicely) (tissue floats down) · 7 Forever shelf (golden glow). "Mark as read" slides up the RatingSheet ("How was it?", seven still Deweys, "Not now"); tapping saves immediately, the big Dewey springs up with that reaction's flourish (≈1s, `popSpring`) and a haptic that strengthens with the rating (Light ×3, Medium ×2, Heavy, Heavy + Success), and the sheet closes itself 1.2s after the last tap. Tapping the current reaction clears it. Reduce motion: face fades in, no flourish, haptic stays. Book detail shows the rating as a still Dewey + label pill (tap to change), or "Rate it" on unrated read books. The source of truth is `REACTIONS` in `src/features/rating/reactions.ts`.
+**Dewey ratings.** A book's rating is one of seven Dewey reactions, stored on the book's reading (`readings.rating`, read/dnf only): 1 Put me to sleep (drifting z's) · 2 Meh. (eye-roll) · 3 Had its moments (head tilt) · 4 Good company (happy bounce + blush) · 5 Couldn't put it down (sparkle burst) · 6 Wrecked me (nicely) (tissue floats down) · 7 Forever shelf (golden glow). "Mark as read" slides up the RatingSheet ("How was it?", seven still Deweys, "Not now"); tapping saves immediately, the big Dewey springs up with that reaction's flourish (≈1s, `popSpring`) and a haptic that strengthens with the rating (Light ×3, Medium ×2, Heavy, Heavy + Success), and the sheet closes itself 1.2s after the last tap. Tapping the current reaction clears it. Reduce motion: face fades in, no flourish, haptic stays. Book detail shows the rating as a still Dewey + label pill (tap to change), or "Rate it" on unrated read books. The source of truth is `REACTIONS` in `src/features/rating/reactions.ts`.
+
+### Reading tracking
+
+Ownership and reading are separate. A copy is **At home** (`owned`) or **On your wishlist**; reading lives in `readings` (one per book): **Want to read · Reading · Read · Did not finish**, with local `YYYY-MM-DD` start/finish dates (starting stamps the start, finishing or giving up stamps the finish, a re-read restarts them) and the Dewey rating (read/dnf only). Shelves opens with a **Currently reading** strip (covers + "Day N", "See all reading"); `/reading` lists the four states, Read grouped by year. Book detail shows an ownership pill and a reading row (chips, dates via compact pickers, rating), with one primary button for the next step (Found it! · Start reading · Finished it · Mark as read, or the loan nudge). Store Mode gives exactly one verdict: **You own this!** (with a reading line) · **Found one!** (wishlist, "Got it! Shelve it") · **You've read this** (Dewey wears the rating face) · **A new find!** (Add to shelves · Wishlist it · Want to read).
+
+### Shelves
+
+Shelves are places (`shelves` + `user_books.shelf_id`); each At home copy sits on one shelf or on **Unshelved** (wishlist copies never do). A shelf keeps its **plank colour** (bus · tomato · pool · grass · plum; new shelves take the next ink) and your **order**; the bookcase shows every shelf in that order — empty ones read "Nothing here yet" — with Unshelved last when it has books. **"+ New shelf"** sits in every shelf picker (Store Mode, Move shelf, the missing-book form); with no shelves yet the pickers suggest Living room · Bedroom · Study. **Manage shelves** (`/shelves`, linked under the Shelves header) lists shelves with plank, name and count: hold to drag-reorder (VoiceOver: Move up / Move down), tap to rename or recolour, and delete — a shelf with books asks "Move its N books to:" (another shelf or Unshelved). Names are unique ignoring case; a clash reads "You already have a shelf called ⟨Name⟩."
 
 ## Do's and Don'ts
 

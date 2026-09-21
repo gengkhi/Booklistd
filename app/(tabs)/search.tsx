@@ -4,12 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { addUserBook, checkOwnership, findWishlistCopy, searchLibrary, upsertBook } from '@/db/repository';
+import { addUserBook, checkOwnership, removeCopy, searchLibrary, setReadingState, setStatus, upsertBook } from '@/db/repository';
 import { invalidateLibrary } from '@/lib/invalidateLibrary';
 import { lookupIsbn } from '@/api/bookLookup';
 import { normalizeToIsbn13 } from '@/lib/isbn';
 import { searchAside } from '@/features/dewey/lines';
-import { UNSHELVED } from '@/features/shelves/groupByRoom';
+import { UNSHELVED } from '@/features/shelves/shelfRules';
 import { Spine } from '@/components/shelf/Spine';
 import { Raised } from '@/components/ui/Raised';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -53,30 +53,45 @@ export default function SearchScreen() {
   const isbn = normalizeToIsbn13(term);
   const { data: mine = [] } = useQuery({ queryKey: ['search', term], queryFn: () => searchLibrary(term), enabled: term.length >= 2 });
   const { data: catalog } = useQuery({ queryKey: ['isbn', isbn], queryFn: () => lookupIsbn(isbn!), enabled: !!isbn });
-  const owned = mine.filter((r) => r.status !== 'wishlist' && r.status !== 'want_to_buy');
-  const wished = mine.filter((r) => r.status === 'wishlist' || r.status === 'want_to_buy');
-  // "+ Add" only for books not already on a shelf or the wishlist (a wishlisted one shows in its own section).
+  const owned = mine.filter((r) => r.status === 'owned');
+  const wished = mine.filter((r) => r.status === 'wishlist');
+  // Catalog actions only for books not already owned; each action hides once it's done.
   const { data: gate } = useQuery({
     queryKey: ['search', 'catalog-gate', isbn],
     queryFn: () => {
       const v = checkOwnership(isbn!);
-      return { owned: v.owned, wished: !!(v.book && findWishlistCopy(v.book.id)) };
+      const w = v.wishlistCopies[0];
+      return { owned: v.owned, wished: v.wishlistCopies.length > 0, reading: !!v.reading, wishCopy: w ? { id: w.id, bookId: w.bookId } : null };
     },
     enabled: !!isbn,
   });
-  const canAdd = !!gate && !gate.owned && !gate.wished;
+  const showCatalog = !!gate && !gate.owned;
 
   const busyRef = useRef(false);
   useEffect(() => {
     busyRef.current = false;
   }, [isbn]);
+  // Every action changes the gate, so its refetch is what re-arms the buttons (a double tap can't double-insert).
+  useEffect(() => {
+    busyRef.current = false;
+  }, [gate]);
 
-  const add = () => {
-    if (!catalog || !canAdd || busyRef.current) return;
+  const act = (run: (bookId: string) => void) => {
+    if (!catalog || busyRef.current) return;
     busyRef.current = true;
-    const book = upsertBook(catalog);
-    addUserBook(book.id, 'owned');
+    run(upsertBook(catalog).id);
     invalidateLibrary(qc);
+  };
+
+  // Move the wishlist copy only when it's this edition; another edition's copy is replaced, never relabelled.
+  const addToShelves = (id: string) => {
+    const wishCopy = gate?.wishCopy ?? null;
+    if (wishCopy && wishCopy.bookId === id) {
+      setStatus(wishCopy.id, 'owned');
+      return;
+    }
+    addUserBook(id, 'owned');
+    if (wishCopy) removeCopy(wishCopy.id);
   };
 
   return (
@@ -106,7 +121,7 @@ export default function SearchScreen() {
             {owned.map((r) => (
               <ResultRow key={r.id} id={r.id} title={r.book.title}
                 sub={[r.book.authors[0], r.book.publisher, r.book.publishedYear].filter(Boolean).join(' · ')}
-                right={<Text style={{ fontFamily: font.black, fontSize: 11.5, color: ink.brown }}>{r.location?.trim() || UNSHELVED}</Text>}
+                right={<Text style={{ fontFamily: font.black, fontSize: 11.5, color: ink.brown }}>{r.shelfName ?? UNSHELVED}</Text>}
                 onPress={() => router.push({ pathname: '/book/[id]', params: { id: r.id } })} />
             ))}
             {wished.length ? (
@@ -123,16 +138,22 @@ export default function SearchScreen() {
           </>
         ) : null}
 
-        {isbn && catalog && canAdd ? (
+        {isbn && catalog && showCatalog ? (
           <>
             <Section label="From the catalog" count={1} />
-            <ResultRow id={isbn} title={catalog.title} sub={[catalog.authors[0], catalog.publishedYear].filter(Boolean).join(' · ')}
-              right={
-                <Pressable onPress={add} accessibilityRole="button" accessibilityLabel={`Add ${catalog.title}`} hitSlop={6}
-                  style={{ height: 36, paddingHorizontal: 14, borderWidth: 2, borderColor: c.line, borderRadius: 10, backgroundColor: ink.bus, justifyContent: 'center' }}>
-                  <Text style={{ fontFamily: font.black, fontSize: 13, color: ink.brown }}>+ Add</Text>
+            <ResultRow id={isbn} title={catalog.title} sub={[catalog.authors[0], catalog.publishedYear].filter(Boolean).join(' · ')} right={null} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 16 }}>
+              {[
+                { label: 'Add to shelves', show: true, run: addToShelves },
+                { label: 'Wishlist it', show: !gate!.wished, run: (id: string) => addUserBook(id, 'wishlist') },
+                { label: 'Want to read', show: !gate!.reading, run: (id: string) => setReadingState(id, 'want') },
+              ].filter((a) => a.show).map((a) => (
+                <Pressable key={a.label} onPress={() => act(a.run)} accessibilityRole="button" accessibilityLabel={`${a.label}: ${catalog.title}`} hitSlop={6}
+                  style={{ height: 36, paddingHorizontal: 14, borderWidth: 2, borderColor: c.line, borderRadius: 10, backgroundColor: a.label === 'Add to shelves' ? ink.bus : ink.white, justifyContent: 'center' }}>
+                  <Text style={{ fontFamily: font.black, fontSize: 13, color: ink.brown }}>{a.label}</Text>
                 </Pressable>
-              } />
+              ))}
+            </View>
           </>
         ) : null}
       </ScrollView>

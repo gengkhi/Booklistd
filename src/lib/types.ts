@@ -1,4 +1,29 @@
-export type BookStatus = 'owned' | 'reading' | 'read' | 'wishlist' | 'loaned' | 'want_to_buy';
+export type BookStatus = 'owned' | 'wishlist';
+
+export type Plank = 'bus' | 'tomato' | 'pool' | 'grass' | 'plum';
+
+/** A place a copy lives. bookCount = live At home copies on it. */
+export interface ShelfRow {
+  id: string;
+  name: string;
+  plank: Plank;
+  sortOrder: number;
+  bookCount: number;
+}
+
+export type ReadingState = 'want' | 'reading' | 'read' | 'dnf';
+
+/** Where the user is with a book — independent of owning it. One live row per book. */
+export interface Reading {
+  id: string;
+  bookId: string;
+  state: ReadingState;
+  startedAt: string | null; // 'YYYY-MM-DD'
+  finishedAt: string | null; // 'YYYY-MM-DD'
+  rating: number | null; // Dewey reaction 1–7
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface Book {
   id: string;
@@ -25,11 +50,12 @@ export interface UserBook {
   bookId: string;
   status: BookStatus;
   condition: string | null;
-  location: string | null;
+  shelfId: string | null;
+  /** Name of the live shelf this copy sits on (joined), null = Unshelved. */
+  shelfName: string | null;
   purchaseDate: string | null;
   purchasePrice: number | null;
   currency: string | null;
-  rating: number | null;
   review: string | null;
   notes: string | null;
   readingProgress: number | null; // current page
@@ -51,4 +77,13 @@ export interface OwnershipVerdict {
   copies: number;
   book: Book | null;
   userBooks: UserBook[];
+  /** Wishlist copies of this book or another edition of the same work (only filled when not owned). */
+  wishlistCopies: UserBook[];
+  /** The live reading for this book, else for another edition of the same work. */
+  reading: Reading | null;
+}
+
+export interface ReadingRow extends Reading {
+  book: Book;
+  ownership: 'owned' | 'wishlist' | null;
 }

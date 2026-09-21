@@ -1,12 +1,13 @@
 import type { LibraryRow } from '@/lib/types';
 
 let n = 0;
-export function row(p: { title?: string; bookId?: string; location?: string | null; status?: LibraryRow['status']; createdAt?: string } = {}): LibraryRow {
+export function row(p: { title?: string; bookId?: string; shelfId?: string | null; shelfName?: string | null; status?: LibraryRow['status']; createdAt?: string } = {}): LibraryRow {
   n += 1;
   const bookId = p.bookId ?? `b${n}`;
   return {
-    id: `ub${n}`, bookId, status: p.status ?? 'owned', condition: null, location: p.location ?? null,
-    purchaseDate: null, purchasePrice: null, currency: null, rating: null, review: null, notes: null,
+    id: `ub${n}`, bookId, status: p.status ?? 'owned', condition: null,
+    shelfId: p.shelfId ?? null, shelfName: p.shelfName ?? null,
+    purchaseDate: null, purchasePrice: null, currency: null, review: null, notes: null,
     readingProgress: null, isFavorite: false, createdAt: p.createdAt ?? '2026-01-01 10:00:00',
     updatedAt: '2026-01-01 10:00:00', deletedAt: null,
     book: {

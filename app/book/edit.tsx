@@ -44,7 +44,7 @@ function Field({ label, value, onChange, error, keyboardType, autoFocus }: {
 }
 
 export default function EditBookScreen() {
-  const params = useLocalSearchParams<{ bookId?: string; isbn?: string; room?: string }>();
+  const params = useLocalSearchParams<{ bookId?: string; isbn?: string; shelfId?: string }>();
   const router = useRouter();
   const qc = useQueryClient();
   const { c } = useTheme();
@@ -98,7 +98,7 @@ export default function EditBookScreen() {
         removeBookCover(book.id);
       }
       saveBookEdit(book.id, toEditPatch(form, catalog));
-      if (createIsbn) addUserBook(book.id, 'owned', params.room || undefined);
+      if (createIsbn) addUserBook(book.id, 'owned', params.shelfId || null);
       invalidateLibrary(qc);
       router.back();
     } catch {

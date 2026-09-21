@@ -1,4 +1,4 @@
-import type { BookStatus } from '@/lib/types';
+import type { ReadingState } from '@/lib/types';
 
 /** Dewey faces used by ratings (4 reuses the existing 'happy'). */
 export type ReactionMood = 'bored' | 'meh' | 'hmm' | 'happy' | 'starry' | 'teary' | 'smitten';
@@ -7,7 +7,7 @@ export type Haptic = 'light' | 'medium' | 'heavy' | 'heavySuccess';
 
 export interface Reaction { rating: number; label: string; mood: ReactionMood; flourish: Flourish; haptic: Haptic }
 
-/** The whole rating scale. Only `rating` is stored (user_books.rating, 1–7). */
+/** The whole rating scale. Only `rating` is stored (readings.rating, 1–7). */
 export const REACTIONS: readonly Reaction[] = [
   { rating: 1, label: 'Put me to sleep', mood: 'bored', flourish: 'zzz', haptic: 'light' },
   { rating: 2, label: 'Meh.', mood: 'meh', flourish: 'eyeRoll', haptic: 'light' },
@@ -33,6 +33,6 @@ export function nextRating(current: number | null, tapped: number): number | nul
   return current === tapped ? null : tapped;
 }
 
-export function shouldPromptRating(prev: BookStatus, next: BookStatus): boolean {
+export function shouldPromptRating(prev: ReadingState | null, next: ReadingState | null): boolean {
   return prev !== 'read' && next === 'read';
 }

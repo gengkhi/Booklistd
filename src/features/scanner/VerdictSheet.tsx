@@ -4,13 +4,17 @@ import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSeque
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import type { ScanResult } from './useScanPipeline';
+import { newFindNote, readVerdictLine, storeVerdict } from './storeVerdict';
 import { ownedLine, newFindLine } from '@/features/dewey/lines';
+import { reactionFor } from '@/features/rating/reactions';
+import { readingLine, todayIso } from '@/features/reading/readingLogic';
 import { hashString } from '@/features/shelves/spineStyle';
+import type { ShelfRow } from '@/lib/types';
+import { ShelfPicker } from '@/components/shelves/ShelfPicker';
 import { CoverArt } from '@/components/shelf/CoverArt';
-import { Dewey } from '@/components/dewey/Dewey';
+import { Dewey, type DeweyMood } from '@/components/dewey/Dewey';
 import { Bubble } from '@/components/ui/Bubble';
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
 import { LeaderRow } from '@/components/ui/PocketCard';
 import { Raised } from '@/components/ui/Raised';
 import { Stamp } from '@/components/ui/Stamp';
@@ -23,23 +27,34 @@ const T_MARK = 500; // stamp / sticker
 const T_DEWEY = 800;
 const T_SAY = 1150;
 
+function LinkButton({ label, onPress, color }: { label: string; onPress: () => void; color: string }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+      <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color, textDecorationLine: 'underline' }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function VerdictSheet({
-  result, rooms, quiet, wishlisted = false, onKeepScanning, onAdd, onAddDetails,
+  result, shelves, quiet, onKeepScanning, onAdd, onAddDetails, onWantToRead, onShelvesChanged,
 }: {
-  result: ScanResult; rooms: string[]; quiet: boolean; wishlisted?: boolean;
-  onKeepScanning: () => void; onAdd: (status: 'owned' | 'wishlist', room: string | null) => void;
-  onAddDetails: (room: string | null) => void;
+  result: ScanResult; shelves: ShelfRow[]; quiet: boolean;
+  onKeepScanning: () => void; onAdd: (status: 'owned' | 'wishlist', shelfId: string | null) => void;
+  onAddDetails: (shelfId: string | null) => void; onWantToRead: () => void; onShelvesChanged: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const { verdict: v, meta, metaLoading, isbn13 } = result;
-  const owned = v.owned;
-  // Catalog lookup failed for an unknown book: an error state, so Dewey stays out of it (spec §5).
-  const lookupFailed = !owned && !metaLoading && !meta && !v.book;
+  const kind = storeVerdict({ ownedCopies: v.owned ? v.copies : 0, wishlistCopies: v.wishlistCopies.length, reading: v.reading });
+  const owned = kind === 'owned';
+  const wishlisted = v.wishlistCopies.length > 0;
+  // Catalog lookup failed for an unknown book: an error state, so Dewey stays out of it.
+  const lookupFailed = kind === 'new' && !metaLoading && !meta && !v.book;
   const title = v.book?.title ?? meta?.title ?? `ISBN ${isbn13}`;
   const author = (v.book?.authors ?? meta?.authors ?? [])[0];
   const edition = [v.book?.publisher ?? meta?.publisher, v.book?.publishedYear ?? meta?.publishedYear].filter(Boolean).join(', ');
-  const [room, setRoom] = useState<string | null>(rooms[0] ?? null);
+  const today = todayIso();
+  const [room, setRoom] = useState<string | null>(shelves[0]?.id ?? null);
   const [say, setSay] = useState(false);
 
   const rise = useSharedValue(700);
@@ -59,12 +74,31 @@ export function VerdictSheet({
 
   const perRoom = useMemo(() => {
     const m = new Map<string, number>();
-    v.userBooks.forEach((ub) => m.set(ub.location?.trim() || 'Unshelved', (m.get(ub.location?.trim() || 'Unshelved') ?? 0) + 1));
+    v.userBooks.forEach((ub) => m.set(ub.shelfName ?? 'Unshelved', (m.get(ub.shelfName ?? 'Unshelved') ?? 0) + 1));
     return [...m.entries()];
   }, [v.userBooks]);
 
   const fg = owned ? ink.white : ink.brown;
-  const line = owned ? ownedLine(v.copies, v.exactIsbnMatch) : newFindLine(hashString(isbn13));
+  const heading =
+    kind === 'owned' ? 'You own this!'
+      : kind === 'wishlist' ? 'Found one!'
+        : kind === 'read' ? "You've read this"
+          : lookupFailed ? "We couldn't find this one." : 'A new find!';
+  const mood: DeweyMood =
+    kind === 'owned' ? 'smug' : kind === 'wishlist' ? 'happy' : kind === 'read' ? reactionFor(v.reading?.rating)?.mood ?? 'happy' : 'gasp';
+  const line =
+    kind === 'owned' ? ownedLine(v.copies, v.exactIsbnMatch)
+      : kind === 'wishlist' ? "That's the one you wanted."
+        : kind === 'read' ? "We've met this one before."
+          : newFindLine(hashString(isbn13));
+  const status = readingLine(v.reading, today);
+
+  const roomPicker = (
+    <>
+      <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.brown, marginTop: 14 }}>Shelve it in</Text>
+      <ShelfPicker shelves={shelves} selected={room} onSelect={setRoom} onCreated={onShelvesChanged} />
+    </>
+  );
 
   return (
     <Animated.View
@@ -81,14 +115,12 @@ export function VerdictSheet({
     >
       {!lookupFailed ? (
         <View style={{ position: 'absolute', right: 16, top: -56, zIndex: 11 }}>
-          <Dewey mood={owned ? 'smug' : 'gasp'} size={70} pop popDelay={T_DEWEY} />
+          <Dewey mood={mood} size={70} pop popDelay={T_DEWEY} />
         </View>
       ) : null}
       {say && !quiet && !lookupFailed ? <Bubble text={line} width={176} style={{ position: 'absolute', right: 90, top: -66, zIndex: 11 }} /> : null}
 
-      <Text accessibilityRole="header" style={{ fontFamily: font.display, fontSize: 40, lineHeight: 44, color: fg }}>
-        {owned ? 'You own this!' : lookupFailed ? "We couldn't find this one." : 'A new find!'}
-      </Text>
+      <Text accessibilityRole="header" style={{ fontFamily: font.display, fontSize: 40, lineHeight: 44, color: fg }}>{heading}</Text>
 
       <Animated.View style={[{ marginTop: 14 }, card]}>
         <Raised offset={3} radius={14}>
@@ -97,34 +129,41 @@ export function VerdictSheet({
             <View style={{ flex: 1 }}>
               <Text numberOfLines={2} style={{ fontFamily: font.black, fontSize: 17, color: ink.brown }}>{title}</Text>
               {author || edition ? <Text numberOfLines={1} style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 2 }}>{[author, edition].filter(Boolean).join(' · ')}</Text> : null}
-              {owned ? (
+              {kind === 'owned' ? (
                 <View style={{ marginTop: 4 }}>
                   <LeaderRow label="Copies" value={String(v.copies)} />
                   {perRoom.slice(0, 2).map(([name, n]) => <LeaderRow key={name} label={name} value={String(n)} />)}
+                  {status ? <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>{status}</Text> : null}
                 </View>
               ) : metaLoading ? (
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6 }}>
                   <ActivityIndicator color={ink.brown} />
                   <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft }}>Dewey is looking it up…</Text>
                 </View>
-              ) : wishlisted ? (
-                <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>On your wishlist</Text>
+              ) : kind === 'wishlist' ? (
+                <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>{status ? `On your wishlist · ${status}` : 'On your wishlist'}</Text>
+              ) : kind === 'read' ? (
+                <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>{readVerdictLine(v.reading!)}</Text>
               ) : lookupFailed ? (
                 <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 4 }}>No catalog had it, or we couldn't reach one. You can add the details yourself.</Text>
               ) : (
-                <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.grass, marginTop: 4 }}>Not on any shelf · not on your wishlist</Text>
+                <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.grass, marginTop: 4 }}>{newFindNote(v.reading) ?? 'Not on any shelf · not on your wishlist'}</Text>
               )}
             </View>
           </View>
         </Raised>
-        {owned ? (
+        {kind === 'owned' ? (
           <Stamp label="ALREADY YOURS" play delay={T_MARK} onLand={onStampLand} style={{ position: 'absolute', right: 10, top: -18 }} />
+        ) : kind === 'wishlist' ? (
+          <Sticker label="WISHLIST" size={78} play delay={T_MARK} style={{ position: 'absolute', right: -8, top: -18 }} />
+        ) : kind === 'read' ? (
+          <Sticker label="READ" play delay={T_MARK} style={{ position: 'absolute', right: -8, top: -18 }} />
         ) : (
           <Sticker label="NEW!" play delay={T_MARK} style={{ position: 'absolute', right: -8, top: -18 }} />
         )}
       </Animated.View>
 
-      {owned ? (
+      {kind === 'owned' ? (
         <>
           <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: fg, marginTop: 12 }}>
             {v.exactIsbnMatch ? 'Same edition you scanned. Put it back gently.' : `Different edition. You own ${v.copies} of this title.`}
@@ -132,25 +171,26 @@ export function VerdictSheet({
           <View style={{ marginTop: 16 }}>
             <Button label="Keep scanning" onPress={onKeepScanning} />
           </View>
-          <Pressable onPress={() => onAdd('owned', v.userBooks[0]?.location ?? null)} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
-            <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: fg, textDecorationLine: 'underline' }}>{`Add copy #${v.copies + 1} anyway`}</Text>
-          </Pressable>
+          <LinkButton label={`Add copy #${v.copies + 1} anyway`} onPress={() => onAdd('owned', v.userBooks[0]?.shelfId ?? null)} color={fg} />
+        </>
+      ) : kind === 'wishlist' ? (
+        <>
+          {roomPicker}
+          <View style={{ marginTop: 16 }}>
+            <Button label="Got it! Shelve it" onPress={() => onAdd('owned', room)} />
+          </View>
+          <LinkButton label="Keep scanning" onPress={onKeepScanning} color={ink.brown} />
         </>
       ) : (
         <>
-          <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.brown, marginTop: 14 }}>Shelve it in</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-            {rooms.map((r) => <Chip key={r} label={r} selected={room === r} onPress={() => setRoom(r)} />)}
-          </View>
+          {roomPicker}
           {lookupFailed ? (
             <>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
                 {!wishlisted ? <Button variant="ghost" flex label="Wishlist it" onPress={() => onAdd('wishlist', null)} /> : null}
                 <Button flex label="Add details" onPress={() => onAddDetails(room)} />
               </View>
-              <Pressable onPress={() => onAdd('owned', room)} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
-                <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: ink.brown, textDecorationLine: 'underline' }}>Add with just the ISBN</Text>
-              </Pressable>
+              <LinkButton label="Add with just the ISBN" onPress={() => onAdd('owned', room)} color={ink.brown} />
             </>
           ) : (
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
@@ -158,9 +198,8 @@ export function VerdictSheet({
               <Button flex label="Add to shelves" onPress={() => onAdd('owned', room)} disabled={metaLoading} />
             </View>
           )}
-          <Pressable onPress={onKeepScanning} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
-            <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: ink.brown, textDecorationLine: 'underline' }}>Not now, keep scanning</Text>
-          </Pressable>
+          {kind === 'new' && !v.reading && !metaLoading ? <LinkButton label="Want to read" onPress={onWantToRead} color={ink.brown} /> : null}
+          <LinkButton label={kind === 'read' ? 'Keep scanning' : 'Not now, keep scanning'} onPress={onKeepScanning} color={ink.brown} />
         </>
       )}
     </Animated.View>

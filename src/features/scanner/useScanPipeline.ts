@@ -37,13 +37,14 @@ export function useScanPipeline() {
 
     const verdict = checkOwnership(isbn13);
     Haptics.notificationAsync(
-      verdict.owned ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning
+      verdict.owned || verdict.wishlistCopies.length > 0 ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning
     );
     setSessionCount((n) => n + 1);
     shown.current = isbn13;
-    setCurrent({ isbn13, verdict, meta: null, metaLoading: !verdict.exactIsbnMatch });
+    const needsLookup = !verdict.book;
+    setCurrent({ isbn13, verdict, meta: null, metaLoading: needsLookup });
 
-    if (!verdict.exactIsbnMatch) {
+    if (needsLookup) {
       lookupIsbn(isbn13).then((meta) => {
         if (meta) {
           // Cache into local catalog, then re-check: workKey may reveal an owned edition.

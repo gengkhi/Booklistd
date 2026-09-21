@@ -1,6 +1,8 @@
 import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 import { MIGRATIONS, SCHEMA_VERSION } from './schema';
 
+export { newId } from './ids';
+
 let db: SQLiteDatabase | null = null;
 
 export function getDb(): SQLiteDatabase {
@@ -16,13 +18,10 @@ function migrate(d: SQLiteDatabase) {
   const current = row?.user_version ?? 0;
   for (let v = current; v < SCHEMA_VERSION; v++) {
     d.withTransactionSync(() => {
-      d.execSync(MIGRATIONS[v]);
+      const m = MIGRATIONS[v];
+      if (typeof m === 'string') d.execSync(m);
+      else m(d);
       d.execSync(`PRAGMA user_version = ${v + 1}`);
     });
   }
-}
-
-export function newId(): string {
-  // UUID-ish, good enough locally; server keeps it as-is on sync.
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
