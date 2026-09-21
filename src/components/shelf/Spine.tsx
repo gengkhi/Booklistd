@@ -64,7 +64,14 @@ export function Spine({
         ) : null}
         {look.showTitle ? (
           <View style={{ width: h - 16, height: w, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '90deg' }] }}>
-            <Text numberOfLines={1} style={{ fontFamily: font.black, fontSize: 10.5 * scale, letterSpacing: 0.6, color: look.fg }}>
+            {/* On dotted spines the title sits on a plain strip so the dots don't eat the letters. */}
+            <Text
+              numberOfLines={1}
+              style={[
+                { fontFamily: font.black, fontSize: 10.5 * scale, letterSpacing: 0.6, color: look.fg },
+                look.pattern === 'dots' && { backgroundColor: look.bg, paddingHorizontal: 4 * scale, maxWidth: '100%' },
+              ]}
+            >
               {title.toUpperCase()}
             </Text>
           </View>

@@ -8,17 +8,18 @@ describe('spineStyle', () => {
   it('stays within size ranges for many ids', () => {
     for (let i = 0; i < 500; i++) {
       const s = spineStyle(`id-${i}`, 'Title');
-      expect(s.width).toBeGreaterThanOrEqual(22);
+      expect(s.width).toBeGreaterThanOrEqual(26);
       expect(s.width).toBeLessThanOrEqual(36);
       expect(s.height).toBeGreaterThanOrEqual(96);
       expect(s.height).toBeLessThanOrEqual(122);
     }
   });
-  it('never prints a title on dotted or narrow spines, or when the title is blank', () => {
+  it('prints the title on every spine, dotted or narrow, so you can tell books apart', () => {
     for (let i = 0; i < 500; i++) {
-      const s = spineStyle(`id-${i}`, 'Title');
-      if (s.pattern === 'dots' || s.width < 24) expect(s.showTitle).toBe(false);
+      expect(spineStyle(`id-${i}`, 'Title').showTitle).toBe(true);
     }
+  });
+  it('prints nothing when the title is blank', () => {
     expect(spineStyle('x', '   ').showTitle).toBe(false);
   });
 });

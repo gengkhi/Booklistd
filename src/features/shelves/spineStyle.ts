@@ -31,10 +31,10 @@ export function hashString(s: string): number {
 export function spineStyle(id: string, title: string): SpineLook {
   const h = hashString(id);
   const sw = SWATCHES[h % SWATCHES.length];
-  const width = 22 + ((h >>> 3) % 15); // 22–36
+  const width = 26 + ((h >>> 3) % 11); // 26–36, wide enough for a rotated title
   const height = 96 + ((h >>> 7) % 27); // 96–122
   const p = (h >>> 11) % 5;
   const pattern: SpinePattern = p === 0 ? 'dots' : p <= 2 ? 'band' : 'plain';
-  const showTitle = pattern !== 'dots' && width >= 24 && title.trim().length > 0;
+  const showTitle = title.trim().length > 0;
   return { ...sw, width, height, pattern, showTitle };
 }
