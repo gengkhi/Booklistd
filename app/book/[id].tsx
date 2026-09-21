@@ -5,12 +5,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Svg, { Path } from 'react-native-svg';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { getLibraryRow, listCopiesOfBook, listLibrary, listRooms, setLocation, setStatus } from '@/db/repository';
+import { getLibraryRow, listCopiesOfBook, listLibrary, listRooms, setLocation, setRating, setStatus } from '@/db/repository';
 import { UNSHELVED } from '@/features/shelves/groupByRoom';
 import { invalidateLibrary } from '@/lib/invalidateLibrary';
+import { needsDetails } from '@/features/bookEdits/editLogic';
 import { useSettings } from '@/stores/settings';
 import { CoverArt } from '@/components/shelf/CoverArt';
 import { Spine } from '@/components/shelf/Spine';
+import { RatingBadge } from '@/components/rating/RatingBadge';
+import { RatingSheet } from '@/components/rating/RatingSheet';
+import { shouldPromptRating } from '@/features/rating/reactions';
 import { Dewey } from '@/components/dewey/Dewey';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -44,6 +48,7 @@ export default function BookDetailScreen() {
   const { c } = useTheme();
   const quiet = useSettings((s) => s.quiet);
   const [moving, setMoving] = useState(false);
+  const [rateOpen, setRatingOpen] = useState(false);
   const { data: row } = useQuery({ queryKey: ['book', id], queryFn: () => getLibraryRow(id) });
   const { data: all = [] } = useQuery({ queryKey: ['library'], queryFn: () => listLibrary() });
   const copies = useMemo(() => (row ? listCopiesOfBook(row.bookId) : []), [row]);
@@ -68,7 +73,12 @@ export default function BookDetailScreen() {
           }) }
         : row.status === 'read'
           ? { label: 'Mark as unread', run: () => { setStatus(row.id, 'owned'); refresh(); } }
-          : { label: 'Mark as read', run: () => { setStatus(row.id, 'read'); refresh(); } };
+          : { label: 'Mark as read', run: () => {
+              const prev = row.status;
+              setStatus(row.id, 'read');
+              refresh();
+              if (shouldPromptRating(prev, 'read')) setRatingOpen(true);
+            } };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }} edges={['top']}>
@@ -107,7 +117,14 @@ export default function BookDetailScreen() {
             <Text style={{ fontFamily: font.heavy, fontSize: 14, color: c.soft, marginTop: 4 }}>{row.book.authors.join(', ')}</Text>
             <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <Pill label={row.status === 'read' ? 'Read' : row.status === 'wishlist' ? 'Wishlist' : row.status === 'reading' ? 'Reading' : 'On the shelf'} selected />
-              {row.rating ? <Pill label={`★ ${row.rating}`} /> : null}
+              {row.rating ? (
+                <RatingBadge rating={row.rating} onPress={() => setRatingOpen(true)} />
+              ) : row.status === 'read' ? (
+                <Pressable onPress={() => setRatingOpen(true)} accessibilityRole="button" hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} style={{ height: 32, justifyContent: 'center', paddingHorizontal: 4 }}>
+                  <Text style={{ fontFamily: font.heavy, fontSize: 13, color: c.text, textDecorationLine: 'underline' }}>Rate it</Text>
+                </Pressable>
+              ) : null}
+              {row.book.edited ? <Pill label="Edited by you" /> : null}
             </View>
           </View>
         </View>
@@ -119,6 +136,25 @@ export default function BookDetailScreen() {
           {row.book.publisher || row.book.publishedYear ? <LeaderRow label="Edition" value={[row.book.publisher, row.book.publishedYear].filter(Boolean).join(', ')} /> : null}
           <LeaderRow label="ISBN" value={row.book.isbn13 ?? '—'} />
         </PocketCard>
+
+        {needsDetails(row.book) ? (
+          <Pressable
+            onPress={() => router.push({ pathname: '/book/edit', params: { bookId: row.bookId } })}
+            accessibilityRole="button"
+            style={{ marginHorizontal: 16, marginTop: 14, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: ink.tape, borderWidth: 2, borderColor: c.line, borderRadius: 10, padding: 10 }}
+          >
+            <Dewey size={38} mood="gasp" />
+            <Text style={{ flex: 1, fontFamily: font.heavy, fontSize: 13, color: ink.brown }}>Missing details. Add them so you can find it later.</Text>
+          </Pressable>
+        ) : null}
+
+        <Pressable
+          onPress={() => router.push({ pathname: '/book/edit', params: { bookId: row.bookId } })}
+          accessibilityRole="button"
+          style={{ marginHorizontal: 16, marginTop: 10, minHeight: 44, justifyContent: 'center' }}
+        >
+          <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: c.text, textDecorationLine: 'underline' }}>Edit details</Text>
+        </Pressable>
 
         {loaned?.loanedAt ? (
           <View style={{ marginHorizontal: 16, marginTop: 14, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: ink.tape, borderWidth: 2, borderColor: c.line, borderRadius: 10, padding: 10 }}>
@@ -142,6 +178,12 @@ export default function BookDetailScreen() {
           <Button flex label={primary.label} onPress={primary.run} />
         </View>
       </ScrollView>
+      <RatingSheet
+        visible={rateOpen}
+        rating={row.rating}
+        onRate={(n) => { setRating(row.id, n); refresh(); }}
+        onClose={() => setRatingOpen(false)}
+      />
     </SafeAreaView>
   );
 }

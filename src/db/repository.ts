@@ -4,8 +4,15 @@
  */
 import { getDb, newId } from './database';
 import type { Book, BookStatus, LibraryRow, OwnershipVerdict, UserBook } from '@/lib/types';
+import { isEmptyPatch, type BookEditPatch, type BookEditRow } from '@/features/bookEdits/editLogic';
+import { deleteCoverFile, documentUri, resolveCoverUri, saveCoverFile } from '@/features/bookEdits/coverFiles';
+import { isValidRating } from '@/features/rating/reactions';
 
 // ---------- mappers ----------
+// toBook runs once per row, and a big library has thousands of rows — cache the documents URI.
+let docsUri: string | null = null;
+const docs = () => (docsUri ??= documentUri());
+
 const toBook = (r: any): Book => ({
   id: r.id,
   isbn13: r.isbn13,
@@ -18,10 +25,11 @@ const toBook = (r: any): Book => ({
   edition: r.edition,
   genres: JSON.parse(r.genres ?? '[]'),
   pageCount: r.page_count,
-  coverUrl: r.cover_url,
+  coverUrl: resolveCoverUri(r.cover_path ?? null, docs()) ?? r.cover_url,
   description: r.description,
   workKey: r.work_key,
   source: r.source,
+  edited: !!r.edited,
 });
 
 const toUserBook = (r: any): UserBook => ({
@@ -53,7 +61,7 @@ function enqueue(table: string, rowId: string, op: 'upsert' | 'delete', payload:
 // ---------- the Store Mode hot path (must stay <150ms, fully offline) ----------
 export function checkOwnership(isbn13: string, scannedWorkKey?: string | null): OwnershipVerdict {
   const d = getDb();
-  const exact = d.getFirstSync<any>('SELECT * FROM books WHERE isbn13 = ?', [isbn13]);
+  const exact = d.getFirstSync<any>('SELECT * FROM books_effective WHERE isbn13 = ?', [isbn13]);
   const book = exact ? toBook(exact) : null;
 
   const copiesFor = (bookIds: string[]): UserBook[] => {
@@ -75,7 +83,7 @@ export function checkOwnership(isbn13: string, scannedWorkKey?: string | null): 
   // Work-level match: same work, different edition/ISBN → duplicate warning.
   const workKey = scannedWorkKey ?? book?.workKey ?? null;
   if (workKey) {
-    const siblings = d.getAllSync<any>('SELECT * FROM books WHERE work_key = ?', [workKey]).map(toBook);
+    const siblings = d.getAllSync<any>('SELECT * FROM books_effective WHERE work_key = ?', [workKey]).map(toBook);
     const workCopies = copiesFor(siblings.map((b) => b.id));
     if (workCopies.length > 0) {
       const ownedBook = siblings.find((b) => b.id === workCopies[0].bookId) ?? siblings[0];
@@ -110,8 +118,91 @@ export function upsertBook(b: Omit<Book, 'id'> & { id?: string }): Book {
 }
 
 export function findBookByIsbn(isbn13: string): Book | null {
-  const r = getDb().getFirstSync<any>('SELECT * FROM books WHERE isbn13 = ?', [isbn13]);
+  const r = getDb().getFirstSync<any>('SELECT * FROM books_effective WHERE isbn13 = ?', [isbn13]);
   return r ? toBook(r) : null;
+}
+
+// ---------- manual details (book_edits) ----------
+const toEditRow = (r: any): BookEditRow => ({
+  title: r.title,
+  subtitle: r.subtitle,
+  authors: r.authors ? JSON.parse(r.authors) : null,
+  publisher: r.publisher,
+  publishedYear: r.published_year,
+  edition: r.edition,
+  coverPath: r.cover_path,
+});
+
+export function getBook(bookId: string): Book | null {
+  const r = getDb().getFirstSync<any>('SELECT * FROM books_effective WHERE id = ?', [bookId]);
+  return r ? toBook(r) : null;
+}
+
+export function getCatalogBook(bookId: string): Book | null {
+  const r = getDb().getFirstSync<any>('SELECT * FROM books WHERE id = ?', [bookId]);
+  return r ? toBook(r) : null;
+}
+
+export function getBookEdit(bookId: string): BookEditRow | null {
+  const r = getDb().getFirstSync<any>('SELECT * FROM book_edits WHERE book_id = ?', [bookId]);
+  return r ? toEditRow(r) : null;
+}
+
+/** Replace the text overrides. Any save makes the edit a pending contribution again. */
+export function saveBookEdit(bookId: string, patch: BookEditPatch): void {
+  const d = getDb();
+  const existing = getBookEdit(bookId);
+  if (isEmptyPatch(patch) && !existing?.coverPath) {
+    d.runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
+    return;
+  }
+  d.runSync(
+    `INSERT INTO book_edits (book_id, title, subtitle, authors, publisher, published_year, edition, cover_path, updated_at, contributed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), NULL)
+     ON CONFLICT(book_id) DO UPDATE SET
+       title=excluded.title, subtitle=excluded.subtitle, authors=excluded.authors, publisher=excluded.publisher,
+       published_year=excluded.published_year, edition=excluded.edition,
+       updated_at=datetime('now'), contributed_at=NULL`,
+    [
+      bookId, patch.title, patch.subtitle, patch.authors ? JSON.stringify(patch.authors) : null,
+      patch.publisher, patch.publishedYear, patch.edition, existing?.coverPath ?? null,
+    ]
+  );
+}
+
+/** Copies the photo first; the row is only written once the file exists. */
+export async function setBookCover(bookId: string, sourceUri: string): Promise<void> {
+  const previous = getBookEdit(bookId)?.coverPath ?? null;
+  const rel = await saveCoverFile(bookId, sourceUri);
+  getDb().runSync(
+    `INSERT INTO book_edits (book_id, cover_path, updated_at, contributed_at) VALUES (?, ?, datetime('now'), NULL)
+     ON CONFLICT(book_id) DO UPDATE SET cover_path=excluded.cover_path, updated_at=datetime('now'), contributed_at=NULL`,
+    [bookId, rel]
+  );
+  if (previous && previous !== rel) deleteCoverFile(previous);
+}
+
+export function removeBookCover(bookId: string): void {
+  const edit = getBookEdit(bookId);
+  if (!edit?.coverPath) return;
+  const d = getDb();
+  const { coverPath, ...text } = edit;
+  if (isEmptyPatch(text)) d.runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
+  else d.runSync(`UPDATE book_edits SET cover_path = NULL, updated_at = datetime('now'), contributed_at = NULL WHERE book_id = ?`, [bookId]);
+  deleteCoverFile(coverPath);
+}
+
+export function resetBookEdits(bookId: string): void {
+  const coverPath = getBookEdit(bookId)?.coverPath ?? null;
+  getDb().runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
+  deleteCoverFile(coverPath);
+}
+
+/** Edits not yet uploaded to the shared catalog. Uploading ships with sign-in (future sub-project). */
+export function listPendingContributions(): (BookEditRow & { bookId: string; updatedAt: string })[] {
+  return getDb()
+    .getAllSync<any>('SELECT * FROM book_edits WHERE contributed_at IS NULL ORDER BY updated_at')
+    .map((r) => ({ ...toEditRow(r), bookId: r.book_id, updatedAt: r.updated_at }));
 }
 
 // ---------- user library ----------
@@ -139,8 +230,9 @@ export function addUserBook(bookId: string, status: BookStatus, location?: strin
 }
 
 const LIBRARY_SELECT = `SELECT ub.*, b.id as b_id, b.isbn13, b.isbn10, b.title, b.subtitle, b.authors, b.publisher,
-       b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.description, b.work_key, b.source
-  FROM user_books ub JOIN books b ON b.id = ub.book_id`;
+       b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.cover_path, b.description, b.work_key,
+       b.source, b.edited
+  FROM user_books ub JOIN books_effective b ON b.id = ub.book_id`;
 
 const toRow = (r: any): LibraryRow => ({ ...toUserBook(r), book: toBook({ ...r, id: r.b_id }) });
 
@@ -194,7 +286,7 @@ export function listCopiesOfBook(bookId: string): CopyRow[] {
     .map((r) => ({ ...toUserBook(r), borrower: r.loan_borrower ?? null, loanedAt: r.loan_at ?? null }));
 }
 
-function updateUserBook(userBookId: string, column: 'status' | 'location', value: string | null) {
+function updateUserBook(userBookId: string, column: 'status' | 'location' | 'rating', value: string | number | null) {
   const d = getDb();
   d.runSync(`UPDATE user_books SET ${column} = ?, updated_at = datetime('now') WHERE id = ?`, [value, userBookId]);
   const row = d.getFirstSync<any>('SELECT * FROM user_books WHERE id = ?', [userBookId]);
@@ -207,6 +299,12 @@ export function setStatus(userBookId: string, status: BookStatus): void {
 
 export function setLocation(userBookId: string, location: string | null): void {
   updateUserBook(userBookId, 'location', location?.trim() || null);
+}
+
+/** Dewey rating 1–7 (see src/features/rating/reactions.ts); null clears it. */
+export function setRating(userBookId: string, rating: number | null): void {
+  if (rating !== null && !isValidRating(rating)) throw new Error('Rating must be a whole number from 1 to 7.');
+  updateUserBook(userBookId, 'rating', rating);
 }
 
 export function listRooms(): string[] {

@@ -101,7 +101,7 @@ components:
     backgroundColor: "{colors.pool}"
     textColor: "{colors.white}"
     rounded: "{rounded.spine}"
-    width: "22-36px"
+    width: "26-36px"
     height: "96-122px"
 ---
 
@@ -222,7 +222,7 @@ The system uses exactly one depth device — a hard, unblurred offset shadow —
 Five-tab bar (Shelves · Search · Scan · Wishlist · Profile); Scan is a raised circular yellow sticker breaking the tab baseline as the app's one unmissable primary action. Tab switches are instant/native, no transition authored.
 
 ### Spine (signature)
-An outlined rectangle whose width (22–36px), height (96–122px), fill/pattern (plain, band, or halftone dots from an 8-swatch set), and vertical title visibility are all derived deterministically (FNV-1a hash) from the copy's database id — so a given copy always renders the same spine, and the Book detail cover pulled for that copy shares its fill/accent colors. Titles render rotated 90°, Figtree Black 10.5px. Press lifts the spine −8px over 120ms; the last spine on a shelf of 4+ leans −10°.
+An outlined rectangle whose width (26–36px), height (96–122px) and fill/pattern (plain, band, or halftone dots from an 8-swatch set) are all derived deterministically (FNV-1a hash) from the copy's database id — so a given copy always renders the same spine, and the Book detail cover pulled for that copy shares its fill/accent colors. Every bookcase spine shows its title, rotated 90°, Figtree Black 10.5px, one line with an ellipsis; on dotted spines the title sits on a plain strip of the spine color. Mini spines (search, wishlist) stay untitled. Press lifts the spine −8px over 120ms; the last spine on a shelf of 4+ leans −10°.
 
 ### Shelf / Bookcase (signature)
 A `Shelf` is a horizontally virtualized row of spines standing on a colored plank (one of five rotating plank colors), with a room-tag pill (name · count) and an optional rotated tape note at top-left. A `Bookcase` is the outlined, `Raised`-shadowed panel that holds one `Shelf` per room, with exactly one prop (a two-tone `Plant` SVG) at the end of the first shelf.
@@ -231,7 +231,13 @@ A `Shelf` is a horizontally virtualized row of spines standing on a colored plan
 `Stamp` renders rubber-stamp verdict copy (ALREADY YOURS, WANTED SINCE…) that slams onto the verdict card: scale 2.4→0.92→1.04→1 with rotation −22°→−8°→−9° over 420ms, firing a heavy haptic and a small card shake on impact. `Sticker` is its "new find" counterpart — a yellow circle that spring-slaps into place. Both are `pointerEvents="none"`, decorative-over-content, and both collapse to a static end state under reduced motion.
 
 ### Dewey (signature)
-An SVG bookworm (three stacked green circles, white eye-patches, ink outline) with four moods — happy, smug, gasp, sleep — and a spring "pop" entrance (`popSpring`: damping 9, stiffness 180, mass 0.7) used on the Shelves shelf and the verdict sheet. Sleep mood draws a drifting "z". Speaks through `Bubble` (white, outlined, `Raised`-shadowed, `ZoomIn` on text change) using lines from `src/features/dewey/lines.ts` — see the wit contract in Do's and Don'ts.
+An SVG bookworm (three stacked green circles, white eye-patches, ink outline) with four moods — happy, smug, gasp, sleep — plus seven rating faces (see Dewey ratings below), and a spring "pop" entrance (`popSpring`: damping 9, stiffness 180, mass 0.7) used on the Shelves shelf and the verdict sheet. Sleep mood draws a drifting "z". Speaks through `Bubble` (white, outlined, `Raised`-shadowed, `ZoomIn` on text change) using lines from `src/features/dewey/lines.ts` — see the wit contract in Do's and Don'ts.
+
+**Lookup failed.** When no catalog knows the ISBN, the sheet heading reads "We couldn't find this one." (no Dewey, no bubble — it's an error state). Primary action "Add details" opens the edit form (`/book/edit?isbn=…&room=…`), which shelves the copy on save; the link "Add with just the ISBN" keeps the old one-tap placeholder add.
+
+**Edit details form.** Modal route `/book/edit`. Cover slot on top (Take photo / Choose from library / Remove photo, cropped 2:3, stored on-device at ~600px JPEG), then Title (required) and Authors (comma-separated); Subtitle, Publisher, Year and Edition sit behind "More details". Edits override catalog data per field and never replace it — "Reset to catalog" removes them. Book detail shows an "Edited by you" pill and, for placeholder titles or books with no author, a "Missing details" nudge.
+
+**Dewey ratings.** A copy's rating is one of seven Dewey reactions, stored as 1–7 in `user_books.rating`: 1 Put me to sleep (drifting z's) · 2 Meh. (eye-roll) · 3 Had its moments (head tilt) · 4 Good company (happy bounce + blush) · 5 Couldn't put it down (sparkle burst) · 6 Wrecked me (nicely) (tissue floats down) · 7 Forever shelf (golden glow). "Mark as read" slides up the RatingSheet ("How was it?", seven still Deweys, "Not now"); tapping saves immediately, the big Dewey springs up with that reaction's flourish (≈1s, `popSpring`) and a haptic that strengthens with the rating (Light ×3, Medium ×2, Heavy, Heavy + Success), and the sheet closes itself 1.2s after the last tap. Tapping the current reaction clears it. Reduce motion: face fades in, no flourish, haptic stays. Book detail shows the rating as a still Dewey + label pill (tap to change), or "Rate it" on unrated read books. The source of truth is `REACTIONS` in `src/features/rating/reactions.ts`.
 
 ## Do's and Don'ts
 

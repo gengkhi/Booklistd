@@ -2,7 +2,7 @@
  * Local SQLite schema — the device is the source of truth; Supabase is sync/backup.
  * Mirror of supabase/migrations/0001_init.sql (minus RLS). Version every change.
  */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const MIGRATIONS: string[] = [
   // v1 — initial
@@ -92,5 +92,34 @@ export const MIGRATIONS: string[] = [
     key TEXT PRIMARY KEY,
     value TEXT
   );
+  `,
+  // v2 — user overrides for catalog data (manual details + cover photos), merged by a view.
+  // Keep books_effective in sync with applyEdits() in src/features/bookEdits/editLogic.ts.
+  `
+  CREATE TABLE IF NOT EXISTS book_edits (
+    book_id TEXT PRIMARY KEY REFERENCES books(id),
+    title TEXT,
+    subtitle TEXT,
+    authors TEXT,
+    publisher TEXT,
+    published_year INTEGER,
+    edition TEXT,
+    cover_path TEXT,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    contributed_at TEXT
+  );
+
+  CREATE VIEW IF NOT EXISTS books_effective AS
+  SELECT b.id, b.isbn13, b.isbn10,
+         COALESCE(e.title, b.title) AS title,
+         COALESCE(e.subtitle, b.subtitle) AS subtitle,
+         COALESCE(e.authors, b.authors) AS authors,
+         COALESCE(e.publisher, b.publisher) AS publisher,
+         COALESCE(e.published_year, b.published_year) AS published_year,
+         COALESCE(e.edition, b.edition) AS edition,
+         b.genres, b.page_count, b.cover_url, e.cover_path,
+         b.description, b.work_key, b.source,
+         (e.book_id IS NOT NULL) AS edited
+    FROM books b LEFT JOIN book_edits e ON e.book_id = b.id;
   `,
 ];

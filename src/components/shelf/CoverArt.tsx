@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { spineStyle } from '@/features/shelves/spineStyle';
@@ -10,9 +10,13 @@ export function CoverArt({
   id, title, author, coverUrl, width, height,
 }: { id: string; title: string; author?: string; coverUrl?: string | null; width: number; height: number }) {
   const { c } = useTheme();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+  }, [coverUrl]);
   const frame = { width, height, borderWidth: 2.5, borderColor: c.line, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, borderTopRightRadius: 6, borderBottomRightRadius: 6, overflow: 'hidden' as const };
-  if (coverUrl) {
-    return <Image source={{ uri: coverUrl }} style={frame} resizeMode="cover" accessibilityLabel={`Cover of ${title}`} />;
+  if (coverUrl && !failed) {
+    return <Image source={{ uri: coverUrl }} style={frame} resizeMode="cover" accessibilityLabel={`Cover of ${title}`} onError={() => setFailed(true)} />;
   }
   const look = spineStyle(id, title);
   return (

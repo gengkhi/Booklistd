@@ -112,6 +112,13 @@ export default function ScanScreen() {
     toastTimer.current = setTimeout(() => setToast(null), 1800);
   };
 
+  const addDetails = (room: string | null) => {
+    if (!current) return;
+    const isbn = current.isbn13;
+    dismiss();
+    router.push({ pathname: '/book/edit', params: room ? { isbn, room } : { isbn } });
+  };
+
   const statusBar = focused ? <StatusBar style="light" /> : null;
   if (!permission) return <View style={{ flex: 1, backgroundColor: SCENE }}>{statusBar}</View>;
   if (!permission.granted) {
@@ -163,7 +170,7 @@ export default function ScanScreen() {
         ) : null}
       </View>
       {current ? (
-        <VerdictSheet key={current.isbn13} result={current} rooms={rooms} quiet={quiet} wishlisted={!!wishCopy} onKeepScanning={dismiss} onAdd={addAs} />
+        <VerdictSheet key={current.isbn13} result={current} rooms={rooms} quiet={quiet} wishlisted={!!wishCopy} onKeepScanning={dismiss} onAdd={addAs} onAddDetails={addDetails} />
       ) : null}
       <Toast text={toast} />
     </View>

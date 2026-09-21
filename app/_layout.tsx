@@ -47,7 +47,9 @@ export default function RootLayout() {
   return (
     <QueryProvider>
       <StatusBar style={scheme === 'lamp' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.paper } }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.paper } }}>
+        <Stack.Screen name="book/edit" options={{ presentation: 'modal' }} />
+      </Stack>
     </QueryProvider>
   );
 }

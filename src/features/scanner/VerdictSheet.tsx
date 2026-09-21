@@ -24,10 +24,11 @@ const T_DEWEY = 800;
 const T_SAY = 1150;
 
 export function VerdictSheet({
-  result, rooms, quiet, wishlisted = false, onKeepScanning, onAdd,
+  result, rooms, quiet, wishlisted = false, onKeepScanning, onAdd, onAddDetails,
 }: {
   result: ScanResult; rooms: string[]; quiet: boolean; wishlisted?: boolean;
   onKeepScanning: () => void; onAdd: (status: 'owned' | 'wishlist', room: string | null) => void;
+  onAddDetails: (room: string | null) => void;
 }) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -86,7 +87,7 @@ export function VerdictSheet({
       {say && !quiet && !lookupFailed ? <Bubble text={line} width={176} style={{ position: 'absolute', right: 90, top: -66, zIndex: 11 }} /> : null}
 
       <Text accessibilityRole="header" style={{ fontFamily: font.display, fontSize: 40, lineHeight: 44, color: fg }}>
-        {owned ? 'You own this!' : 'A new find!'}
+        {owned ? 'You own this!' : lookupFailed ? "We couldn't find this one." : 'A new find!'}
       </Text>
 
       <Animated.View style={[{ marginTop: 14 }, card]}>
@@ -109,7 +110,7 @@ export function VerdictSheet({
               ) : wishlisted ? (
                 <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>On your wishlist</Text>
               ) : lookupFailed ? (
-                <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 4 }}>Couldn't reach the catalog. You can still add it by ISBN.</Text>
+                <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 4 }}>No catalog had it, or we couldn't reach one. You can add the details yourself.</Text>
               ) : (
                 <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.grass, marginTop: 4 }}>Not on any shelf · not on your wishlist</Text>
               )}
@@ -141,10 +142,22 @@ export function VerdictSheet({
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
             {rooms.map((r) => <Chip key={r} label={r} selected={room === r} onPress={() => setRoom(r)} />)}
           </View>
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            {!wishlisted ? <Button variant="ghost" flex label="Wishlist it" onPress={() => onAdd('wishlist', null)} disabled={metaLoading} /> : null}
-            <Button flex label="Add to shelves" onPress={() => onAdd('owned', room)} disabled={metaLoading} />
-          </View>
+          {lookupFailed ? (
+            <>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                {!wishlisted ? <Button variant="ghost" flex label="Wishlist it" onPress={() => onAdd('wishlist', null)} /> : null}
+                <Button flex label="Add details" onPress={() => onAddDetails(room)} />
+              </View>
+              <Pressable onPress={() => onAdd('owned', room)} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+                <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: ink.brown, textDecorationLine: 'underline' }}>Add with just the ISBN</Text>
+              </Pressable>
+            </>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+              {!wishlisted ? <Button variant="ghost" flex label="Wishlist it" onPress={() => onAdd('wishlist', null)} disabled={metaLoading} /> : null}
+              <Button flex label="Add to shelves" onPress={() => onAdd('owned', room)} disabled={metaLoading} />
+            </View>
+          )}
           <Pressable onPress={onKeepScanning} accessibilityRole="button" style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
             <Text style={{ fontFamily: font.heavy, fontSize: 13.5, color: ink.brown, textDecorationLine: 'underline' }}>Not now, keep scanning</Text>
           </Pressable>

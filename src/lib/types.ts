@@ -16,6 +16,8 @@ export interface Book {
   description: string | null;
   workKey: string | null;
   source: 'google' | 'openlibrary' | 'isbndb' | 'manual';
+  /** True when the user has overridden any catalog field or added a cover photo (book_edits row exists). */
+  edited?: boolean;
 }
 
 export interface UserBook {
