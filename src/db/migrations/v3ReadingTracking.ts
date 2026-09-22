@@ -7,7 +7,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { newId } from '../ids';
 import { mapCopyStatus, readingFromLegacy, type LegacyCopy } from '@/features/reading/legacy';
 
-export const READINGS_DDL = `
+const READINGS_DDL = `
   CREATE TABLE IF NOT EXISTS readings (
     id TEXT PRIMARY KEY,
     book_id TEXT NOT NULL REFERENCES books(id),

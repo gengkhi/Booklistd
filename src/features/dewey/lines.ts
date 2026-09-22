@@ -8,7 +8,7 @@ import { UNSHELVED, type ShelfGroup } from '@/features/shelves/shelfRules';
 export const MAX_LINE = 70;
 const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 export const countWord = (n: number) => (n >= 0 && n < WORDS.length ? WORDS[n] : String(n));
-export const clip = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).trimEnd() + '…');
+const clip = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).trimEnd() + '…');
 
 export const EMPTY_SHELF = "An empty shelf. I've reserved it for you.";
 

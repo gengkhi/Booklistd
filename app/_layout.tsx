@@ -5,7 +5,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { BagelFatOne_400Regular } from '@expo-google-fonts/bagel-fat-one';
-import { Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900Black } from '@expo-google-fonts/figtree';
+// Per-weight imports: the package root requires all 14 Figtree files, and Metro would ship every one.
+import { Figtree_700Bold } from '@expo-google-fonts/figtree/700Bold';
+import { Figtree_800ExtraBold } from '@expo-google-fonts/figtree/800ExtraBold';
+import { Figtree_900Black } from '@expo-google-fonts/figtree/900Black';
 import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { UndoToast } from '@/components/ui/UndoToast';
@@ -21,7 +24,7 @@ export default function RootLayout() {
   const { scheme, c } = useTheme();
   const [fontsLoaded] = useFonts({
     BagelFatOne_400Regular,
-    Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900Black,
+    Figtree_700Bold, Figtree_800ExtraBold, Figtree_900Black,
     GochiHand_400Regular,
   });
 

@@ -1,6 +1,8 @@
 /**
  * Repository — every screen talks to this, never to SQLite directly.
- * Writes also enqueue a pending_op so the sync engine can push later.
+ * Writes also enqueue a pending_op so a future sync engine (Phase 3) can push them oldest-first.
+ * Phase 3 notes: readings are backfilled on server and device with different ids — push them with
+ * onConflict 'user_id,book_id'; shelves likewise — match on (user_id, lower(trim(name))) so they don't duplicate.
  */
 import { getDb, newId } from './database';
 import type { Book, BookStatus, LibraryRow, OwnershipVerdict, Plank, Reading, ReadingRow, ReadingState, ShelfRow, UserBook } from '@/lib/types';
@@ -208,16 +210,9 @@ export function resetBookEdits(bookId: string): void {
   deleteCoverFile(coverPath);
 }
 
-/** Edits not yet uploaded to the shared catalog. Uploading ships with sign-in (future sub-project). */
-export function listPendingContributions(): (BookEditRow & { bookId: string; updatedAt: string })[] {
-  return getDb()
-    .getAllSync<any>('SELECT * FROM book_edits WHERE contributed_at IS NULL ORDER BY updated_at')
-    .map((r) => ({ ...toEditRow(r), bookId: r.book_id, updatedAt: r.updated_at }));
-}
-
 // ---------- user library ----------
 /** A live wishlist copy of this exact book, if one exists (checkOwnership ignores wishlist rows). */
-export function findWishlistCopy(bookId: string): UserBook | null {
+function findWishlistCopy(bookId: string): UserBook | null {
   const r = getDb().getFirstSync<any>(
     `SELECT * FROM user_books WHERE book_id = ? AND status = 'wishlist' AND deleted_at IS NULL
       ORDER BY created_at LIMIT 1`,
@@ -276,13 +271,13 @@ export function searchLibrary(q: string): LibraryRow[] {
     .map(toRow);
 }
 
-export interface CopyRow extends UserBook {
+interface CopyRow extends UserBook {
   borrower: string | null;
   loanedAt: string | null;
 }
 
 /** Every owned copy of one book, with its active loan (if any). */
-export function listCopiesOfBook(bookId: string): CopyRow[] {
+function listCopiesOfBook(bookId: string): CopyRow[] {
   return getDb()
     .getAllSync<any>(
       `SELECT ub.*, s.name AS shelf_name, l.borrower_name AS loan_borrower, l.loaned_at AS loan_at
@@ -351,13 +346,13 @@ const toReading = (r: any): Reading => ({
   updatedAt: r.updated_at,
 });
 
-export function getReading(bookId: string): Reading | null {
+function getReading(bookId: string): Reading | null {
   const r = getDb().getFirstSync<any>('SELECT * FROM readings WHERE book_id = ? AND deleted_at IS NULL', [bookId]);
   return r ? toReading(r) : null;
 }
 
 /** This book's reading, else the most recent reading of another edition of the same work. */
-export function findReadingForWork(bookId: string | null, workKey: string | null): Reading | null {
+function findReadingForWork(bookId: string | null, workKey: string | null): Reading | null {
   if (bookId) {
     const exact = getReading(bookId);
     if (exact) return exact;

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, SectionList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -57,42 +57,52 @@ export default function ReadingScreen() {
   const [seg, setSeg] = useState<ReadingState>(initial);
   const { data: rows = [], isLoading } = useQuery({ queryKey: ['reading', seg], queryFn: () => listReadings(seg) });
   const today = todayIso();
-  const groups = seg === 'read' ? groupReadByYear(rows) : [{ year: '', items: rows }];
+  // The Read history grows without bound, so rows are virtualized, grouped by year.
+  const sections = useMemo(() => {
+    if (!rows.length) return [];
+    const groups = seg === 'read' ? groupReadByYear(rows) : [{ year: '', items: rows }];
+    return groups.map((g) => ({ key: g.year || 'all', year: g.year, data: g.items }));
+  }, [rows, seg]);
   const open = (bookId: string) => router.push({ pathname: '/book/[id]', params: { id: bookId } });
+
+  const header = (
+    <>
+      <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+        <Raised offset={2} radius={22} style={{ alignSelf: 'flex-start' }}>
+          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back"
+            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: ink.white, borderWidth: 2.5, borderColor: c.line, alignItems: 'center', justifyContent: 'center' }}>
+            <Svg width={20} height={20} fill="none" stroke={ink.brown} strokeWidth={2.8}><Path d="M13 4l-7 6 7 6" /></Svg>
+          </Pressable>
+        </Raised>
+      </View>
+      <ScreenHeader title="Reading" />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 16, marginTop: 12, marginBottom: 8 }}>
+        {SEGMENTS.map((s) => <Chip key={s} label={READING_LABEL[s]} selected={seg === s} onPress={() => setSeg(s)} />)}
+      </View>
+    </>
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }} edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
-          <Raised offset={2} radius={22} style={{ alignSelf: 'flex-start' }}>
-            <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back"
-              style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: ink.white, borderWidth: 2.5, borderColor: c.line, alignItems: 'center', justifyContent: 'center' }}>
-              <Svg width={20} height={20} fill="none" stroke={ink.brown} strokeWidth={2.8}><Path d="M13 4l-7 6 7 6" /></Svg>
-            </Pressable>
-          </Raised>
-        </View>
-        <ScreenHeader title="Reading" />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 16, marginTop: 12, marginBottom: 8 }}>
-          {SEGMENTS.map((s) => <Chip key={s} label={READING_LABEL[s]} selected={seg === s} onPress={() => setSeg(s)} />)}
-        </View>
-        {!isLoading && rows.length === 0 ? (
+      <SectionList
+        sections={sections}
+        keyExtractor={(r) => r.id}
+        stickySectionHeadersEnabled={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        ListHeaderComponent={header}
+        ListEmptyComponent={!isLoading ? (
           <Text style={{ marginHorizontal: 20, marginTop: 16, fontFamily: font.bold, fontSize: 14, color: c.soft }}>{EMPTY[seg]}</Text>
-        ) : (
-          groups.map((g) => (
-            <View key={g.year || 'all'}>
-              {g.year ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 14, marginBottom: 8 }}>
-                  <View style={{ width: 18, height: 2, backgroundColor: c.text }} />
-                  <Text accessibilityRole="header" style={{ fontFamily: font.black, fontSize: 13, color: c.text }}>
-                    {`${g.year} · ${g.items.length} ${g.items.length === 1 ? 'book' : 'books'}`}
-                  </Text>
-                </View>
-              ) : null}
-              {g.items.map((r) => <Row key={r.id} r={r} today={today} onPress={() => open(r.bookId)} />)}
-            </View>
-          ))
-        )}
-      </ScrollView>
+        ) : null}
+        renderSectionHeader={({ section }) => (section.year ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 14, marginBottom: 8 }}>
+            <View style={{ width: 18, height: 2, backgroundColor: c.text }} />
+            <Text accessibilityRole="header" style={{ fontFamily: font.black, fontSize: 13, color: c.text }}>
+              {`${section.year} · ${section.data.length} ${section.data.length === 1 ? 'book' : 'books'}`}
+            </Text>
+          </View>
+        ) : null)}
+        renderItem={({ item }) => <Row r={item} today={today} onPress={() => open(item.bookId)} />}
+      />
     </SafeAreaView>
   );
 }

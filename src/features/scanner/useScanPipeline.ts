@@ -45,18 +45,19 @@ export function useScanPipeline() {
     setCurrent({ isbn13, verdict, meta: null, metaLoading: needsLookup });
 
     if (needsLookup) {
-      lookupIsbn(isbn13).then((meta) => {
-        if (meta) {
+      const settle = () => setCurrent((c) => (c?.isbn13 === isbn13 ? { ...c, metaLoading: false } : c));
+      lookupIsbn(isbn13)
+        .then((meta) => {
+          if (!meta) return settle();
           // Cache into local catalog, then re-check: workKey may reveal an owned edition.
           upsertBook(meta);
           const recheck = checkOwnership(isbn13, meta.workKey);
           setCurrent((c) =>
             c?.isbn13 === isbn13 ? { ...c, meta, metaLoading: false, verdict: recheck } : c
           );
-        } else {
-          setCurrent((c) => (c?.isbn13 === isbn13 ? { ...c, metaLoading: false } : c));
-        }
-      });
+        })
+        // A failed cache write must not leave the verdict spinning; it falls back to "add details".
+        .catch(settle);
     }
   }, []);
 

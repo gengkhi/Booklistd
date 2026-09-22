@@ -10,11 +10,26 @@ import { supabase, supabaseConfigured } from './supabase';
 
 export type BookMeta = Omit<Book, 'id'>;
 
+/** Store Mode waits on this, so a dead connection must fail fast instead of spinning forever. */
+const TIMEOUT_MS = 8000;
+
+async function getJson(url: string): Promise<any | null> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    return res.ok ? await res.json() : null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 export async function lookupIsbn(isbn13: string): Promise<BookMeta | null> {
   if (supabaseConfigured) {
     try {
       const { data, error } = await supabase.functions.invoke<BookMeta>('book-lookup', {
         body: { isbn: isbn13 },
+        timeout: TIMEOUT_MS,
       });
       if (!error && data?.title) return data;
     } catch {
@@ -26,10 +41,8 @@ export async function lookupIsbn(isbn13: string): Promise<BookMeta | null> {
 
 async function fromGoogleBooks(isbn13: string): Promise<BookMeta | null> {
   try {
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    const v = json.items?.[0]?.volumeInfo;
+    const json = await getJson(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}`);
+    const v = json?.items?.[0]?.volumeInfo;
     if (!v?.title) return null;
     return {
       isbn13,
@@ -54,15 +67,13 @@ async function fromGoogleBooks(isbn13: string): Promise<BookMeta | null> {
 
 async function fromOpenLibrary(isbn13: string): Promise<BookMeta | null> {
   try {
-    const res = await fetch(`https://openlibrary.org/isbn/${isbn13}.json`);
-    if (!res.ok) return null;
-    const ed = await res.json();
+    const ed = await getJson(`https://openlibrary.org/isbn/${isbn13}.json`);
     if (!ed?.title) return null;
     const workKey: string | null = ed.works?.[0]?.key ?? null;
     let authors: string[] = [];
     if (Array.isArray(ed.authors) && ed.authors[0]?.key) {
       try {
-        const a = await fetch(`https://openlibrary.org${ed.authors[0].key}.json`).then((r) => r.json());
+        const a = await getJson(`https://openlibrary.org${ed.authors[0].key}.json`);
         if (a?.name) authors = [a.name];
       } catch {}
     }

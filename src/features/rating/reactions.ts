@@ -2,7 +2,7 @@ import type { ReadingState } from '@/lib/types';
 
 /** Dewey faces used by ratings (4 reuses the existing 'happy'). */
 export type ReactionMood = 'bored' | 'meh' | 'hmm' | 'happy' | 'starry' | 'teary' | 'smitten';
-export type Flourish = 'zzz' | 'eyeRoll' | 'headTilt' | 'happyBounce' | 'sparkleBurst' | 'tissue' | 'goldenGlow';
+type Flourish = 'zzz' | 'eyeRoll' | 'headTilt' | 'happyBounce' | 'sparkleBurst' | 'tissue' | 'goldenGlow';
 export type Haptic = 'light' | 'medium' | 'heavy' | 'heavySuccess';
 
 export interface Reaction { rating: number; label: string; mood: ReactionMood; flourish: Flourish; haptic: Haptic }

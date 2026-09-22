@@ -8,8 +8,8 @@ import { useTheme } from '@/theme/useTheme';
 const OFFSET = 3;
 
 export function Button({
-  label, onPress, variant = 'primary', disabled, flex, accessibilityLabel,
-}: { label: string; onPress: () => void; variant?: 'primary' | 'ghost'; disabled?: boolean; flex?: boolean; accessibilityLabel?: string }) {
+  label, onPress, variant = 'primary', disabled, flex,
+}: { label: string; onPress: () => void; variant?: 'primary' | 'ghost'; disabled?: boolean; flex?: boolean }) {
   const { c } = useTheme();
   const press = useSharedValue(0);
   const face = useAnimatedStyle(() => ({
@@ -21,7 +21,7 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}

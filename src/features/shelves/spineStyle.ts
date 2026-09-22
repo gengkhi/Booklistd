@@ -1,6 +1,6 @@
 import { ink } from '@/theme/palette';
 
-export type SpinePattern = 'plain' | 'band' | 'dots';
+type SpinePattern = 'plain' | 'band' | 'dots';
 export interface SpineLook {
   bg: string; fg: string; accent: string;
   width: number; height: number;

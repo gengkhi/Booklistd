@@ -5,7 +5,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-export const COVERS_DIR = 'covers';
+const COVERS_DIR = 'covers';
 const COVER_WIDTH = 600;
 
 export function coverFileName(bookId: string, now: number = Date.now()): string {

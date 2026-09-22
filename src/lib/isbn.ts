@@ -1,6 +1,6 @@
 /** ISBN utilities — the scan pipeline's first stop. */
 
-export function clean(raw: string): string {
+function clean(raw: string): string {
   return raw.replace(/[^0-9Xx]/g, '').toUpperCase();
 }
 
@@ -17,14 +17,14 @@ export function normalizeToIsbn13(raw: string): string | null {
   return null;
 }
 
-export function isValidIsbn13(isbn: string): boolean {
+function isValidIsbn13(isbn: string): boolean {
   if (!/^\d{13}$/.test(isbn)) return false;
   let sum = 0;
   for (let i = 0; i < 12; i++) sum += Number(isbn[i]) * (i % 2 === 0 ? 1 : 3);
   return (10 - (sum % 10)) % 10 === Number(isbn[12]);
 }
 
-export function isValidIsbn10(isbn: string): boolean {
+function isValidIsbn10(isbn: string): boolean {
   if (!/^\d{9}[\dX]$/.test(isbn)) return false;
   let sum = 0;
   for (let i = 0; i < 9; i++) sum += Number(isbn[i]) * (10 - i);
@@ -32,7 +32,7 @@ export function isValidIsbn10(isbn: string): boolean {
   return sum % 11 === 0;
 }
 
-export function isbn10To13(isbn10: string): string {
+function isbn10To13(isbn10: string): string {
   const core = '978' + isbn10.slice(0, 9);
   let sum = 0;
   for (let i = 0; i < 12; i++) sum += Number(core[i]) * (i % 2 === 0 ? 1 : 3);

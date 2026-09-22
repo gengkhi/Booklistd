@@ -30,10 +30,9 @@ catalog cache, auth, and sync.
 app/                  Expo Router — (tabs)/ library, search, scan, wishlist, profile; book/[id]
 src/theme/tokens.ts   The "reading nook" design tokens (see DESIGN.md)
 src/lib/isbn.ts       Normalize/validate scans (EAN-13 978/979, ISBN-10 upgrade)
-src/db/               SQLite: schema (versioned), database bootstrap, repository
+src/db/               SQLite: schema (versioned), bootstrap, repository (writes queue pending_ops; sync is Phase 3)
 src/features/scanner/ useScanPipeline — cooldown, offline verdict, async metadata
 src/api/              Supabase client + book lookup waterfall
-src/sync/             Push queue implemented; pull is Phase 3 (see TODO)
 supabase/             Postgres migration (RLS) + book-lookup edge function
 ```
 

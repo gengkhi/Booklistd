@@ -17,7 +17,7 @@ export function nextPlank(existing: { plank: Plank; sortOrder: number }[]): Plan
   return PLANK_INKS[(PLANK_INKS.indexOf(last.plank) + 1) % PLANK_INKS.length];
 }
 
-export interface MigratedShelf { key: string; name: string; sortOrder: number; plank: Plank }
+interface MigratedShelf { key: string; name: string; sortOrder: number; plank: Plank }
 
 /**
  * Pre-v4 rooms (free-text location) → shelves. Names merge by normaliseName; the display spelling is the

@@ -8,10 +8,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.sean.booklistd",
-      "supportsTablet": false,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Booklistd uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
-      }
+      "supportsTablet": false
     },
     "android": {
       "package": "com.sean.booklistd",
@@ -26,7 +23,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Booklistd uses the camera to scan book barcodes so you can catalog books and check ownership in stores."
+          "cameraPermission": "Booklistd uses the camera to scan book barcodes and to photograph book covers.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [

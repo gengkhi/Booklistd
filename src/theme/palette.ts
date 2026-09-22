@@ -58,7 +58,6 @@ export const palettes: Record<Scheme, Palette> = {
 
 export const font = {
   display: 'BagelFatOne_400Regular',
-  body: 'Figtree_600SemiBold',
   bold: 'Figtree_700Bold',
   heavy: 'Figtree_800ExtraBold',
   black: 'Figtree_900Black',
@@ -66,5 +65,3 @@ export const font = {
 } as const;
 
 export const radius = { spine: 3, card: 8, button: 14, sheet: 26, pill: 999 } as const;
-export const space = (n: number) => n * 4;
-export const PLANKS = [ink.bus, ink.tomato, ink.pool, ink.grass, ink.plum] as const;

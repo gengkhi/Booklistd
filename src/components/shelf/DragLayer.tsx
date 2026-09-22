@@ -36,13 +36,11 @@ interface Ctx {
   setEdge: (dir: number) => void;
   drop: (key: string) => void;
   cancel: () => void;
-  remeasure: () => void;
 }
 
 const DragCtx = createContext<Ctx | null>(null);
 
 export const useDraggingId = () => useContext(DragCtx)?.draggingId ?? null;
-export const useDragRemeasure = () => useContext(DragCtx)?.remeasure ?? (() => {});
 
 /** Registers a view as a drop zone; highlight is 1 while the finger is over it. */
 export function useDropZone(key: string, id: string | null, kind: 'shelf' | 'bin') {
@@ -232,8 +230,8 @@ export function DragProvider({ rowsById, onDrop, onDraggingChange, onEdge, remea
   }, [bounds]);
 
   const value = useMemo<Ctx>(() => ({
-    draggingId, tick, zones, target, x, y, edge, bounds, register, unregister, begin, targetChanged, setEdge, drop, cancel, remeasure,
-  }), [draggingId, tick, zones, target, x, y, edge, bounds, register, unregister, begin, targetChanged, setEdge, drop, cancel, remeasure]);
+    draggingId, tick, zones, target, x, y, edge, bounds, register, unregister, begin, targetChanged, setEdge, drop, cancel,
+  }), [draggingId, tick, zones, target, x, y, edge, bounds, register, unregister, begin, targetChanged, setEdge, drop, cancel]);
 
   const row = draggingId ? rowsById.get(draggingId) : undefined;
   return (

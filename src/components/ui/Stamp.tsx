@@ -5,10 +5,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { font, ink } from '@/theme/palette';
 
+const color = ink.tomato;
+
 /** Rubber stamp. When `play` turns true it slams down (420ms) and calls onLand at impact. */
 export function Stamp({
-  label, color = ink.tomato, play, delay = 0, onLand, style,
-}: { label: string; color?: string; play: boolean; delay?: number; onLand?: () => void; style?: StyleProp<ViewStyle> }) {
+  label, play, delay = 0, onLand, style,
+}: { label: string; play: boolean; delay?: number; onLand?: () => void; style?: StyleProp<ViewStyle> }) {
   const reduced = useReducedMotion();
   const t = useSharedValue(0);
 
