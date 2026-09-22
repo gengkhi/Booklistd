@@ -8,6 +8,7 @@ import { BagelFatOne_400Regular } from '@expo-google-fonts/bagel-fat-one';
 import { Figtree_600SemiBold, Figtree_700Bold, Figtree_800ExtraBold, Figtree_900Black } from '@expo-google-fonts/figtree';
 import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { UndoToast } from '@/components/ui/UndoToast';
 import { getDb } from '@/db/database';
 import { useSettingsReady } from '@/stores/settings';
 import { useTheme } from '@/theme/useTheme';
@@ -53,6 +54,7 @@ export default function RootLayout() {
           <Stack.Screen name="book/edit" options={{ presentation: 'modal' }} />
           <Stack.Screen name="shelves" />
         </Stack>
+        <UndoToast />
       </QueryProvider>
     </GestureHandlerRootView>
   );

@@ -27,8 +27,14 @@ function Dots({ color }: { color: string }) {
 }
 
 export function Spine({
-  id, title, onPress, lean = 0, scale = 1,
-}: { id: string; title: string; onPress?: () => void; lean?: number; scale?: number }) {
+  id, title, onPress, lean = 0, scale = 1, hidden, accessibilityActions, onAccessibilityAction,
+}: {
+  id: string; title: string; onPress?: () => void; lean?: number; scale?: number;
+  /** Keeps the gap on the shelf while this spine is being dragged. */
+  hidden?: boolean;
+  accessibilityActions?: { name: string; label: string }[];
+  onAccessibilityAction?: (e: { nativeEvent: { actionName: string } }) => void;
+}) {
   const { c } = useTheme();
   const look = spineStyle(id, title);
   const w = Math.round(look.width * scale);
@@ -46,6 +52,8 @@ export function Spine({
       onPressOut={to(0, motion.routine)}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={title}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={onAccessibilityAction}
       hitSlop={{ top: 8, bottom: 8 }}
       style={{ marginLeft: lean ? 10 : 0 }}
     >
@@ -55,6 +63,7 @@ export function Spine({
             width: w, height: h, backgroundColor: look.bg, borderWidth: 2, borderColor: c.line, borderRadius: radius.spine,
             overflow: 'hidden', alignItems: 'center', justifyContent: 'center', transformOrigin: 'bottom right',
           },
+          hidden && { opacity: 0 },
           s,
         ]}
       >

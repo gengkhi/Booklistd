@@ -464,7 +464,8 @@ export interface BookDetail {
 
 export function getBookDetail(id: string): BookDetail | null {
   const copy = getDb().getFirstSync<{ id: string; book_id: string }>(
-    'SELECT id, book_id FROM user_books WHERE id = ? AND deleted_at IS NULL',
+    // No deleted_at filter: a removed copy still resolves to its book, so detail stays open on it.
+    'SELECT id, book_id FROM user_books WHERE id = ?',
     [id]
   );
   const bookId = copy?.book_id ?? id;
@@ -565,5 +566,43 @@ export function deleteShelf(id: string, moveTo: string | null): void {
     }
     d.runSync(`UPDATE shelves SET deleted_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`, [id]);
     enqueueShelf(id, 'delete');
+  });
+}
+
+// ---------- removing a copy, reversibly ----------
+export function openLoanFor(copyId: string): { id: string; borrower: string } | null {
+  const r = getDb().getFirstSync<{ id: string; borrower_name: string }>(
+    'SELECT id, borrower_name FROM loans WHERE user_book_id = ? AND returned_at IS NULL AND deleted_at IS NULL LIMIT 1',
+    [copyId]
+  );
+  return r ? { id: r.id, borrower: r.borrower_name } : null;
+}
+
+/** Soft-delete a copy; an open loan on it is closed. Returns what restoreCopy needs to undo it, or null if the copy is already gone (e.g. a double tap). */
+export function removeCopyForUndo(copyId: string): { copyId: string; reopenLoanId: string | null } | null {
+  const d = getDb();
+  const existing = d.getFirstSync<{ deleted_at: string | null }>('SELECT deleted_at FROM user_books WHERE id = ?', [copyId]);
+  if (!existing || existing.deleted_at !== null) return null;
+  const loan = openLoanFor(copyId);
+  d.withTransactionSync(() => {
+    if (loan) {
+      d.runSync(`UPDATE loans SET returned_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`, [loan.id]);
+      enqueue('loans', loan.id, 'upsert', d.getFirstSync<any>('SELECT * FROM loans WHERE id = ?', [loan.id]));
+    }
+    removeCopy(copyId);
+  });
+  return { copyId, reopenLoanId: loan?.id ?? null };
+}
+
+/** Undo: the same copy comes back (id, shelf, dates), and a loan closed by the removal reopens. */
+export function restoreCopy(copyId: string, reopenLoanId: string | null): void {
+  const d = getDb();
+  d.withTransactionSync(() => {
+    d.runSync(`UPDATE user_books SET deleted_at = NULL, updated_at = datetime('now') WHERE id = ?`, [copyId]);
+    enqueue('user_books', copyId, 'upsert', d.getFirstSync<any>('SELECT * FROM user_books WHERE id = ?', [copyId]));
+    if (reopenLoanId) {
+      d.runSync(`UPDATE loans SET returned_at = NULL, updated_at = datetime('now') WHERE id = ?`, [reopenLoanId]);
+      enqueue('loans', reopenLoanId, 'upsert', d.getFirstSync<any>('SELECT * FROM loans WHERE id = ?', [reopenLoanId]));
+    }
   });
 }
