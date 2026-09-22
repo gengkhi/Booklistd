@@ -1,4 +1,4 @@
-import type { LibraryRow } from '@/lib/types';
+import type { Book, LibraryRow } from '@/lib/types';
 
 let n = 0;
 export function row(p: { title?: string; bookId?: string; shelfId?: string | null; shelfName?: string | null; status?: LibraryRow['status']; createdAt?: string } = {}): LibraryRow {
@@ -15,5 +15,14 @@ export function row(p: { title?: string; bookId?: string; shelfId?: string | nul
       publisher: null, publishedYear: null, edition: null, genres: [], pageCount: null, coverUrl: null,
       description: null, workKey: null, source: 'manual',
     },
+  };
+}
+
+/** Catalog metadata for upsertBook(). The default ISBN is Dune's, with a valid checksum. */
+export function bookMeta(p: { isbn13?: string; title?: string } = {}): Omit<Book, 'id'> {
+  return {
+    isbn13: p.isbn13 ?? '9780441172719', isbn10: null, title: p.title ?? 'Dune', subtitle: null, authors: ['Frank Herbert'],
+    publisher: null, publishedYear: null, edition: null, genres: [], pageCount: null, coverUrl: null,
+    description: null, workKey: null, source: 'manual',
   };
 }

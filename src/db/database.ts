@@ -13,10 +13,11 @@ export function getDb(): SQLiteDatabase {
   return db;
 }
 
-function migrate(d: SQLiteDatabase) {
+/** `target` is for tests that seed an older schema before upgrading it (the app always migrates to the latest). */
+export function migrate(d: SQLiteDatabase, target: number = SCHEMA_VERSION) {
   const row = d.getFirstSync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
-  for (let v = current; v < SCHEMA_VERSION; v++) {
+  for (let v = current; v < target; v++) {
     d.withTransactionSync(() => {
       const m = MIGRATIONS[v];
       if (typeof m === 'string') d.execSync(m);
@@ -24,4 +25,9 @@ function migrate(d: SQLiteDatabase) {
       d.execSync(`PRAGMA user_version = ${v + 1}`);
     });
   }
+}
+
+/** Tests only: point getDb() at an in-memory database (see src/test/testDb.ts). */
+export function __setDbForTest(d: SQLiteDatabase | null): void {
+  db = d;
 }

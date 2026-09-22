@@ -1,22 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Image, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { documentUri, resolveCoverUri } from '@/features/bookEdits/coverFiles';
 import { spineStyle } from '@/features/shelves/spineStyle';
+import { ensureLocal } from '@/sync/covers';
 import { font, ink } from '@/theme/palette';
 import { useTheme } from '@/theme/useTheme';
 
 /** Real cover when we have one; otherwise a flat picture-book cover in the book's spine colors. */
 export function CoverArt({
-  id, title, author, coverUrl, width, height,
-}: { id: string; title: string; author?: string; coverUrl?: string | null; width: number; height: number }) {
+  id, title, author, coverUrl, width, height, bookId, coverPending, coverObject,
+}: {
+  id: string; title: string; author?: string; coverUrl?: string | null; width: number; height: number;
+  /** With coverPending, the synced photo for this book is downloaded once and shown; a new coverObject fetches again. */
+  bookId?: string; coverPending?: boolean; coverObject?: string;
+}) {
   const { c } = useTheme();
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     setFailed(false);
   }, [coverUrl]);
+  const [fetched, setFetched] = useState<string | null>(null);
+  useEffect(() => {
+    setFetched(null); // a recycled cell must not show another book's photo
+    if (!coverPending || !bookId) return;
+    let alive = true;
+    ensureLocal(bookId).then(
+      (rel) => { if (alive && rel) setFetched(resolveCoverUri(rel, documentUri())); },
+      () => {}
+    );
+    return () => { alive = false; };
+  }, [bookId, coverPending, coverObject]);
+  const uri = coverUrl ?? fetched;
   const frame = { width, height, borderWidth: 2.5, borderColor: c.line, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, borderTopRightRadius: 6, borderBottomRightRadius: 6, overflow: 'hidden' as const };
-  if (coverUrl && !failed) {
-    return <Image source={{ uri: coverUrl }} style={frame} resizeMode="cover" accessibilityLabel={`Cover of ${title}`} onError={() => setFailed(true)} />;
+  if (uri && !failed) {
+    return <Image source={{ uri }} style={frame} resizeMode="cover" accessibilityLabel={`Cover of ${title}`} onError={() => setFailed(true)} />;
   }
   const look = spineStyle(id, title);
   return (

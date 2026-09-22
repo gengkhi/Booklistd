@@ -39,7 +39,7 @@ function Row({ r, today, onPress }: { r: ReadingRow; today: string; onPress: () 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${r.book.title}, ${sub}${face ? `, ${face.label}` : ''}`}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginBottom: 10, backgroundColor: ink.white, borderWidth: 2, borderColor: c.line, borderRadius: 12, padding: 10, minHeight: 76 }}>
-      <CoverArt id={r.bookId} title={r.book.title} coverUrl={r.book.coverUrl} width={40} height={60} />
+      <CoverArt id={r.bookId} title={r.book.title} coverUrl={r.book.coverUrl} bookId={r.bookId} coverPending={r.book.coverPending} coverObject={r.book.coverObject} width={40} height={60} />
       <View style={{ flex: 1 }}>
         <Text numberOfLines={1} style={{ fontFamily: font.black, fontSize: 15, color: ink.brown }}>{r.book.title}</Text>
         {sub ? <Text numberOfLines={1} style={{ fontFamily: font.bold, fontSize: 12.5, color: ink.soft, marginTop: 2 }}>{sub}</Text> : null}

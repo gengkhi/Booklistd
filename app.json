@@ -8,18 +8,25 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.sean.booklistd",
+      "usesAppleSignIn": true,
       "supportsTablet": false
     },
     "android": {
       "package": "com.sean.booklistd",
       "permissions": [
         "CAMERA"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F3E9D2"
+      }
     },
     "plugins": [
       "expo-router",
       "expo-sqlite",
       "expo-font",
+      "expo-secure-store",
+      "expo-apple-authentication",
       [
         "expo-camera",
         {
@@ -36,10 +43,24 @@
           "microphonePermission": false
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 260,
+          "resizeMode": "contain",
+          "backgroundColor": "#F3E9D2"
+        }
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "icon": "./assets/icon.png",
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

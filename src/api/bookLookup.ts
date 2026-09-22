@@ -3,17 +3,28 @@
  * which runs the Google Books -> Open Library waterfall server-side and caches
  * into the shared public.books catalog. Dev fallback: hit the sources directly
  * so the app works before Supabase is configured.
+ *
+ * Parsing, URL checks and work keys come from the same shared core the edge function
+ * uses (supabase/functions/_shared/bookCore.ts), so both paths produce identical rows.
  */
-import { fallbackWorkKey } from '@/lib/isbn';
+import {
+  isAllowedFetchUrl,
+  lookupGoogleBooks,
+  lookupOpenLibrary,
+  type FetchJson,
+} from '../../supabase/functions/_shared/bookCore';
 import type { Book } from '@/lib/types';
+import { classifyInvokeError, LookupRateLimitedError } from './lookupErrors';
 import { supabase, supabaseConfigured } from './supabase';
 
 export type BookMeta = Omit<Book, 'id'>;
+export { isRateLimited, LookupRateLimitedError } from './lookupErrors';
 
 /** Store Mode waits on this, so a dead connection must fail fast instead of spinning forever. */
 const TIMEOUT_MS = 8000;
 
-async function getJson(url: string): Promise<any | null> {
+const getJson: FetchJson = async (url) => {
+  if (!isAllowedFetchUrl(url)) return null;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -22,77 +33,36 @@ async function getJson(url: string): Promise<any | null> {
   } finally {
     clearTimeout(t);
   }
-}
+};
 
+/**
+ * Resolves the book, or null when no catalog has it.
+ * Throws LookupRateLimitedError when the lookup service is throttling this device: that
+ * is a temporary failure, and callers should say so rather than show "not found".
+ */
 export async function lookupIsbn(isbn13: string): Promise<BookMeta | null> {
   if (supabaseConfigured) {
+    let failure: ReturnType<typeof classifyInvokeError> | null = null;
     try {
       const { data, error } = await supabase.functions.invoke<BookMeta>('book-lookup', {
         body: { isbn: isbn13 },
         timeout: TIMEOUT_MS,
       });
       if (!error && data?.title) return data;
+      if (error) failure = classifyInvokeError(error);
     } catch {
-      // fall through to direct sources
+      // network-level failure: fall through to direct sources
     }
+    if (failure?.kind === 'rate_limited') throw new LookupRateLimitedError(failure.retryAfterSec);
+    // The server already asked both catalogs (not_found) or will never accept this ISBN (invalid).
+    if (failure?.kind === 'not_found' || failure?.kind === 'invalid') return null;
   }
-  return (await fromGoogleBooks(isbn13)) ?? (await fromOpenLibrary(isbn13));
+  return (await direct(() => lookupGoogleBooks(isbn13, getJson))) ?? (await direct(() => lookupOpenLibrary(isbn13, getJson)));
 }
 
-async function fromGoogleBooks(isbn13: string): Promise<BookMeta | null> {
+async function direct(run: () => Promise<BookMeta | null>): Promise<BookMeta | null> {
   try {
-    const json = await getJson(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}`);
-    const v = json?.items?.[0]?.volumeInfo;
-    if (!v?.title) return null;
-    return {
-      isbn13,
-      isbn10: null,
-      title: v.title,
-      subtitle: v.subtitle ?? null,
-      authors: v.authors ?? [],
-      publisher: v.publisher ?? null,
-      publishedYear: v.publishedDate ? Number(String(v.publishedDate).slice(0, 4)) || null : null,
-      edition: null,
-      genres: v.categories ?? [],
-      pageCount: v.pageCount ?? null,
-      coverUrl: v.imageLinks?.thumbnail?.replace('http://', 'https://') ?? null,
-      description: v.description ?? null,
-      workKey: fallbackWorkKey(v.title, v.authors?.[0]),
-      source: 'google',
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function fromOpenLibrary(isbn13: string): Promise<BookMeta | null> {
-  try {
-    const ed = await getJson(`https://openlibrary.org/isbn/${isbn13}.json`);
-    if (!ed?.title) return null;
-    const workKey: string | null = ed.works?.[0]?.key ?? null;
-    let authors: string[] = [];
-    if (Array.isArray(ed.authors) && ed.authors[0]?.key) {
-      try {
-        const a = await getJson(`https://openlibrary.org${ed.authors[0].key}.json`);
-        if (a?.name) authors = [a.name];
-      } catch {}
-    }
-    return {
-      isbn13,
-      isbn10: null,
-      title: ed.title,
-      subtitle: ed.subtitle ?? null,
-      authors,
-      publisher: ed.publishers?.[0] ?? null,
-      publishedYear: ed.publish_date ? Number(String(ed.publish_date).match(/\d{4}/)?.[0]) || null : null,
-      edition: ed.edition_name ?? null,
-      genres: [],
-      pageCount: ed.number_of_pages ?? null,
-      coverUrl: ed.covers?.[0] ? `https://covers.openlibrary.org/b/id/${ed.covers[0]}-L.jpg` : null,
-      description: typeof ed.description === 'string' ? ed.description : ed.description?.value ?? null,
-      workKey: workKey ?? fallbackWorkKey(ed.title, authors[0]),
-      source: 'openlibrary',
-    };
+    return await run();
   } catch {
     return null;
   }

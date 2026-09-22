@@ -251,6 +251,9 @@ Shelves are places (`shelves` + `user_books.shelf_id`); each At home copy sits o
 
 **Book detail — library card.** Back and ⋯ on top, cover + title + author, then one pocket card of tap-to-change rows (Shelf, Status, Rating, Started, Finished, Copies, On loan, Edition, ISBN — each only when it applies), a "Missing details" nudge for placeholder books, and a sticky next-step button (Found it! · Start reading · Finished it · Mark as read · Nudge ⟨name⟩). ⋯ holds Edit details, Move to shelf…, and Remove from shelves.
 
+### App icon
+Dewey, winking and blushing, lounges across the tops of three spines (cream with a tomato band, plum, and a leaning white one with a pool band) on a tomato plank. Under the art, "Booklistd" is set in Bagel Fat One: white, with a 9px ink outline and a hard 11px offset shadow. The ground is case-back (`#F3E9D2`) for the icon, the Android adaptive background and the splash. `assets/brand/logo-mark.svg` is the hand-authored art, and `sh assets/brand/build-icons.sh` rebuilds every PNG in `assets/` from it (the favicon is the art alone, since the name is illegible at 48px).
+
 ## Do's and Don'ts
 
 ### Do:

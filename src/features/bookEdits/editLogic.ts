@@ -16,6 +16,9 @@ export type BookEditRow = BookEditPatch & { coverPath: string | null };
 
 export const EMPTY_PATCH: BookEditPatch = { title: null, subtitle: null, authors: null, publisher: null, publishedYear: null, edition: null };
 
+/** The server's book_edits caps (S3): 300 characters per text field, at most 20 authors. */
+export const EDIT_LIMITS = { text: 300, authors: 20 } as const;
+
 const YEAR = /^\d{4}$/;
 const PLACEHOLDER_TITLE = /^ISBN \d{13}$/;
 
@@ -41,11 +44,13 @@ export function canSave(f: EditForm): boolean {
 
 /** Only fields that differ from the catalog become overrides; blanks fall back to the catalog. */
 export function toEditPatch(f: EditForm, catalog: Book): BookEditPatch {
+  const cap = (v: string) => v.trim().slice(0, EDIT_LIMITS.text).trim();
   const text = (v: string, current: string | null) => {
-    const t = v.trim();
+    const t = cap(v);
     return t === '' || t === (current ?? '') ? null : t;
   };
-  const authors = f.authors.split(',').map((a) => a.trim()).filter(Boolean);
+  // Extra authors are dropped on save, as the backup would refuse more than 20.
+  const authors = f.authors.split(',').map(cap).filter(Boolean).slice(0, EDIT_LIMITS.authors);
   const sameAuthors = authors.length === catalog.authors.length && authors.every((a, i) => a === catalog.authors[i]);
   const y = f.year.trim();
   const year = YEAR.test(y) ? Number(y) : null;

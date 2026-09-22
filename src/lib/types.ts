@@ -40,9 +40,13 @@ export interface Book {
   coverUrl: string | null;
   description: string | null;
   workKey: string | null;
-  source: 'google' | 'openlibrary' | 'isbndb' | 'manual';
+  source: 'google' | 'openlibrary' | 'isbndb' | 'manual' | 'placeholder';
   /** True when the user has overridden any catalog field or added a cover photo (book_edits row exists). */
   edited?: boolean;
+  /** A synced cover photo exists but isn't on this phone yet (CoverArt downloads it when shown). */
+  coverPending?: boolean;
+  /** The synced photo's Storage path, when there is one (CoverArt re-fetches when it changes). */
+  coverObject?: string;
 }
 
 export interface UserBook {

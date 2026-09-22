@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Svg, { Path } from 'react-native-svg';
 import type { Plank, ShelfRow } from '@/lib/types';
 import { createShelf, deleteShelf, listShelves, renameShelf, reorderShelves, setShelfPlank, ShelfNameTaken } from '@/db/repository';
-import { PLANK_INKS, plankColor, UNSHELVED } from '@/features/shelves/shelfRules';
+import { MAX_SHELF_NAME, PLANK_INKS, plankColor, UNSHELVED } from '@/features/shelves/shelfRules';
 import { invalidateLibrary } from '@/lib/invalidateLibrary';
 import { ReorderList } from '@/components/shelves/ReorderList';
 import { useShelfNamePrompt } from '@/components/shelves/useShelfNamePrompt';
@@ -86,7 +86,7 @@ function EditSheet({ shelf, others, onClose, onChanged }: { shelf: ShelfRow; oth
           ) : (
             <>
               <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.brown }}>Name</Text>
-              <TextInput value={name} onChangeText={(t) => { setName(t); setError(null); }} accessibilityLabel="Shelf name" onSubmitEditing={save}
+              <TextInput value={name} onChangeText={(t) => { setName(t); setError(null); }} accessibilityLabel="Shelf name" onSubmitEditing={save} maxLength={MAX_SHELF_NAME}
                 style={{ marginTop: 6, minHeight: 46, paddingHorizontal: 12, borderWidth: 2, borderColor: error ? ink.tomato : ink.brown, borderRadius: radius.card, backgroundColor: ink.white, fontFamily: font.bold, fontSize: 16, color: ink.brown }} />
               {error ? <Text style={{ fontFamily: font.bold, fontSize: 12.5, color: ink.tomato, marginTop: 4 }}>{error}</Text> : null}
               <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.brown, marginTop: 16 }}>Plank colour</Text>

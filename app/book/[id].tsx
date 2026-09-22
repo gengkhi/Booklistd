@@ -213,7 +213,7 @@ export default function BookDetailScreen() {
           <Animated.View entering={FadeInUp.duration(600).withInitialValues({ transform: [{ translateY: -120 }] })}>
             <View style={{ transform: [{ rotate: '-4deg' }] }}>
               <Raised offset={5} radius={6}>
-                <CoverArt id={focus?.id ?? book.id} title={book.title} author={book.authors[0]} coverUrl={book.coverUrl} width={120} height={178} />
+                <CoverArt id={focus?.id ?? book.id} title={book.title} author={book.authors[0]} coverUrl={book.coverUrl} bookId={book.id} coverPending={book.coverPending} coverObject={book.coverObject} width={120} height={178} />
               </Raised>
             </View>
           </Animated.View>

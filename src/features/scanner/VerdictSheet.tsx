@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSeque
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import type { ScanResult } from './useScanPipeline';
+import { rateLimitedMessage } from '@/api/lookupErrors';
 import { newFindNote, readVerdictLine, storeVerdict } from './storeVerdict';
 import { ownedLine, newFindLine } from '@/features/dewey/lines';
 import { reactionFor } from '@/features/rating/reactions';
@@ -44,7 +45,7 @@ export function VerdictSheet({
 }) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
-  const { verdict: v, meta, metaLoading, isbn13 } = result;
+  const { verdict: v, meta, metaLoading, isbn13, rateLimitedFor } = result;
   const kind = storeVerdict({ ownedCopies: v.owned ? v.copies : 0, wishlistCopies: v.wishlistCopies.length, reading: v.reading });
   const owned = kind === 'owned';
   const wishlisted = v.wishlistCopies.length > 0;
@@ -83,7 +84,7 @@ export function VerdictSheet({
     kind === 'owned' ? 'You own this!'
       : kind === 'wishlist' ? 'Found one!'
         : kind === 'read' ? "You've read this"
-          : lookupFailed ? "We couldn't find this one." : 'A new find!';
+          : lookupFailed ? (rateLimitedFor != null ? "Catalog's busy." : "We couldn't find this one.") : 'A new find!';
   const mood: DeweyMood =
     kind === 'owned' ? 'smug' : kind === 'wishlist' ? 'happy' : kind === 'read' ? reactionFor(v.reading?.rating)?.mood ?? 'happy' : 'gasp';
   const line =
@@ -125,7 +126,7 @@ export function VerdictSheet({
       <Animated.View style={[{ marginTop: 14 }, card]}>
         <Raised offset={3} radius={14}>
           <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center', backgroundColor: ink.white, borderWidth: 2.5, borderColor: ink.brown, borderRadius: 14, padding: 12 }}>
-            <CoverArt id={v.book?.id ?? isbn13} title={title} coverUrl={v.book?.coverUrl ?? meta?.coverUrl} width={62} height={92} />
+            <CoverArt id={v.book?.id ?? isbn13} title={title} coverUrl={v.book?.coverPending ? null : (v.book?.coverUrl ?? meta?.coverUrl)} bookId={v.book?.id} coverPending={v.book?.coverPending} coverObject={v.book?.coverObject} width={62} height={92} />
             <View style={{ flex: 1 }}>
               <Text numberOfLines={2} style={{ fontFamily: font.black, fontSize: 17, color: ink.brown }}>{title}</Text>
               {author || edition ? <Text numberOfLines={1} style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 2 }}>{[author, edition].filter(Boolean).join(' · ')}</Text> : null}
@@ -145,7 +146,9 @@ export function VerdictSheet({
               ) : kind === 'read' ? (
                 <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.plum, marginTop: 4 }}>{readVerdictLine(v.reading!)}</Text>
               ) : lookupFailed ? (
-                <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 4 }}>No catalog had it, or we couldn't reach one. You can add the details yourself.</Text>
+                <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.soft, marginTop: 4 }}>
+                  {rateLimitedFor != null ? rateLimitedMessage(rateLimitedFor) : "No catalog had it, or we couldn't reach one. You can add the details yourself."}
+                </Text>
               ) : (
                 <Text style={{ fontFamily: font.heavy, fontSize: 13, color: ink.grass, marginTop: 4 }}>{newFindNote(v.reading) ?? 'Not on any shelf · not on your wishlist'}</Text>
               )}

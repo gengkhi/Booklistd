@@ -7,6 +7,10 @@ export const PLANK_INKS: readonly Plank[] = ['bus', 'tomato', 'pool', 'grass', '
 export const SUGGESTED_SHELVES: readonly string[] = ['Living room', 'Bedroom', 'Study'];
 
 export const normaliseName = (s: string): string => s.trim().toLowerCase();
+/** The server's cap on shelf names (accounts_sync migration). Inputs set it as maxLength. */
+export const MAX_SHELF_NAME = 80;
+/** Trimmed and cut to MAX_SHELF_NAME characters (code points, as Postgres counts them; never half an emoji). */
+export const cleanShelfName = (s: string): string => Array.from(s.trim()).slice(0, MAX_SHELF_NAME).join('').trim();
 export const isPlank = (p: unknown): p is Plank => typeof p === 'string' && (PLANK_INKS as readonly string[]).includes(p);
 export const plankColor = (p: Plank): string => ink[p];
 

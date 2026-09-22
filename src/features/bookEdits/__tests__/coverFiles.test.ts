@@ -1,7 +1,8 @@
 jest.mock('expo-file-system', () => ({ Paths: { document: { uri: 'file:///docs/' } }, File: jest.fn(), Directory: jest.fn() }));
 jest.mock('expo-image-manipulator', () => ({ ImageManipulator: { manipulate: jest.fn() }, SaveFormat: { JPEG: 'jpeg' } }));
 
-import { coverFileName, resolveCoverUri } from '../coverFiles';
+import { File } from 'expo-file-system';
+import { coverFileName, renameCoverFile, resolveCoverUri } from '../coverFiles';
 
 describe('coverFileName', () => {
   it('puts covers in covers/ with the book id and a timestamp', () => {
@@ -21,5 +22,32 @@ describe('resolveCoverUri', () => {
   });
   it('returns null when there is no cover path', () => {
     expect(resolveCoverUri(null, 'file:///docs/')).toBeNull();
+  });
+});
+
+describe('renameCoverFile', () => {
+  const moveSync = jest.fn();
+  function files(exists: boolean) {
+    jest.mocked(File).mockImplementation(((_dir: unknown, rel: string) => ({ uri: rel, exists, moveSync })) as never);
+  }
+  beforeEach(() => moveSync.mockReset());
+
+  it('moves the photo to a name with the new book id and returns the new path', () => {
+    files(true);
+    const out = renameCoverFile('covers/old-1.jpg', 'srv');
+    expect(out).toMatch(/^covers\/srv-\d+\.jpg$/);
+    expect(moveSync).toHaveBeenCalledWith(expect.objectContaining({ uri: out }));
+  });
+  it('returns null when the photo is missing', () => {
+    files(false);
+    expect(renameCoverFile('covers/old-1.jpg', 'srv')).toBeNull();
+    expect(moveSync).not.toHaveBeenCalled();
+  });
+  it('returns null when the move fails', () => {
+    files(true);
+    moveSync.mockImplementation(() => {
+      throw new Error('disk full');
+    });
+    expect(renameCoverFile('covers/old-1.jpg', 'srv')).toBeNull();
   });
 });

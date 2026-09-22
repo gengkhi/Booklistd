@@ -9,7 +9,7 @@ const OFFSET = 3;
 
 export function Button({
   label, onPress, variant = 'primary', disabled, flex,
-}: { label: string; onPress: () => void; variant?: 'primary' | 'ghost'; disabled?: boolean; flex?: boolean }) {
+}: { label: string; onPress: () => void; variant?: 'primary' | 'ghost' | 'danger'; disabled?: boolean; flex?: boolean }) {
   const { c } = useTheme();
   const press = useSharedValue(0);
   const face = useAnimatedStyle(() => ({
@@ -34,13 +34,13 @@ export function Button({
         style={[
           {
             height: 52, borderRadius: radius.button, borderWidth: 2.5, borderColor: c.line,
-            backgroundColor: variant === 'primary' ? ink.bus : ink.white,
+            backgroundColor: variant === 'primary' ? ink.bus : variant === 'danger' ? ink.tomato : ink.white,
             alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18,
           },
           face,
         ]}
       >
-        <Text style={{ fontFamily: font.black, fontSize: 15, color: ink.brown }}>{label}</Text>
+        <Text style={{ fontFamily: font.black, fontSize: 15, color: variant === 'danger' ? ink.white : ink.brown }}>{label}</Text>
       </Animated.View>
     </Pressable>
   );

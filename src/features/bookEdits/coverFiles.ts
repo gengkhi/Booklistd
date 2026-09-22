@@ -47,3 +47,26 @@ export function deleteCoverFile(coverPath: string | null): void {
     // Leftover file costs a few KB; never block the user on it.
   }
 }
+
+/** Best-effort: removes every local cover photo (used by the account wipe). */
+export function deleteAllCoverFiles(): void {
+  try {
+    const dir = new Directory(Paths.document, COVERS_DIR);
+    if (dir.exists) dir.delete();
+  } catch {
+    // A leftover folder is harmless; the rows that pointed at it are gone.
+  }
+}
+
+/** Best-effort: moves a cover photo to a name that uses the new book id. Returns the new relative path, or null. */
+export function renameCoverFile(coverPath: string, bookId: string): string | null {
+  try {
+    const from = new File(Paths.document, coverPath);
+    if (!from.exists) return null;
+    const rel = coverFileName(bookId);
+    from.moveSync(new File(Paths.document, rel));
+    return rel;
+  } catch {
+    return null;
+  }
+}

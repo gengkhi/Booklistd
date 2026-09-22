@@ -6,7 +6,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { migrateV3ReadingTracking } from './migrations/v3ReadingTracking';
 import { migrateV4ShelfCreation } from './migrations/v4ShelfCreation';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 6;
 
 export const MIGRATIONS: (string | ((d: SQLiteDatabase) => void))[] = [
   // v1 — initial
@@ -130,4 +130,45 @@ export const MIGRATIONS: (string | ((d: SQLiteDatabase) => void))[] = [
   migrateV3ReadingTracking,
   // v4 — shelves are places: shelves.plank, user_books.shelf_id; location retired. See src/db/migrations/v4ShelfCreation.ts.
   migrateV4ShelfCreation,
+  // v5 — accounts: the signed-in user's profile row (Apple gives the name only once, so it is kept here and synced).
+  `
+  CREATE TABLE IF NOT EXISTS profiles (
+    id TEXT PRIMARY KEY,
+    display_name TEXT,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  `,
+  // v6 — sync. books.server_known marks catalog ids (set by ensure or pull); book_edits.cover_object is
+  // the synced photo's Storage path; sync_rejects holds rows the server refused. The view gains cover_object.
+  // Keep books_effective in sync with applyEdits() in src/features/bookEdits/editLogic.ts.
+  `
+  ALTER TABLE books ADD COLUMN server_known INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE book_edits ADD COLUMN cover_object TEXT;
+
+  CREATE TABLE IF NOT EXISTS sync_rejects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    op_id INTEGER NOT NULL,
+    table_name TEXT NOT NULL,
+    row_id TEXT NOT NULL,
+    op TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    error_code TEXT NOT NULL,
+    rejected_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_pending_ops_row ON pending_ops(table_name, row_id);
+
+  DROP VIEW IF EXISTS books_effective;
+  CREATE VIEW books_effective AS
+  SELECT b.id, b.isbn13, b.isbn10,
+         COALESCE(e.title, b.title) AS title,
+         COALESCE(e.subtitle, b.subtitle) AS subtitle,
+         COALESCE(e.authors, b.authors) AS authors,
+         COALESCE(e.publisher, b.publisher) AS publisher,
+         COALESCE(e.published_year, b.published_year) AS published_year,
+         COALESCE(e.edition, b.edition) AS edition,
+         b.genres, b.page_count, b.cover_url, e.cover_path, e.cover_object,
+         b.description, b.work_key, b.source,
+         (e.book_id IS NOT NULL) AS edited
+    FROM books b LEFT JOIN book_edits e ON e.book_id = b.id;
+  `,
 ];

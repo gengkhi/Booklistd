@@ -1,8 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Alert, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { MAX_SHELF_NAME } from '@/features/shelves/shelfRules';
 import { font, ink, radius } from '@/theme/palette';
 
-/** "+ New shelf" name prompt: native Alert.prompt on iOS, a tiny modal elsewhere. Render `element` once. */
+/**
+ * "+ New shelf" name prompt: native Alert.prompt on iOS, a tiny modal elsewhere. Render `element` once.
+ * Alert.prompt has no maxLength; createShelf cuts names to MAX_SHELF_NAME either way.
+ */
 export function useShelfNamePrompt() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -33,7 +37,7 @@ export function useShelfNamePrompt() {
         <Pressable onPress={() => {}} style={{ backgroundColor: ink.paper, borderWidth: 2.5, borderColor: ink.brown, borderRadius: radius.card, padding: 16 }}>
           <Text style={{ fontFamily: font.black, fontSize: 16, color: ink.brown }}>New shelf</Text>
           <TextInput value={draft} onChangeText={setDraft} autoFocus placeholder="What should we call it?" placeholderTextColor={ink.soft}
-            onSubmitEditing={submit} accessibilityLabel="Shelf name"
+            onSubmitEditing={submit} accessibilityLabel="Shelf name" maxLength={MAX_SHELF_NAME}
             style={{ marginTop: 10, minHeight: 44, borderWidth: 2, borderColor: ink.brown, borderRadius: radius.card, paddingHorizontal: 10, fontFamily: font.bold, fontSize: 16, color: ink.brown, backgroundColor: ink.white }} />
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 16, marginTop: 12 }}>
             <Pressable onPress={() => setOpen(false)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>

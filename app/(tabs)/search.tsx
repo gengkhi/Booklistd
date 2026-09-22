@@ -6,7 +6,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { addUserBook, checkOwnership, removeCopy, searchLibrary, setReadingState, setStatus, upsertBook } from '@/db/repository';
 import { invalidateLibrary } from '@/lib/invalidateLibrary';
-import { lookupIsbn } from '@/api/bookLookup';
+import { isRateLimited, lookupIsbn } from '@/api/bookLookup';
+import { rateLimitedMessage } from '@/api/lookupErrors';
 import { normalizeToIsbn13 } from '@/lib/isbn';
 import { searchAside } from '@/features/dewey/lines';
 import { UNSHELVED } from '@/features/shelves/shelfRules';
@@ -52,7 +53,14 @@ export default function SearchScreen() {
   const term = q.trim();
   const isbn = normalizeToIsbn13(term);
   const { data: mine = [] } = useQuery({ queryKey: ['search', term], queryFn: () => searchLibrary(term), enabled: term.length >= 2 });
-  const { data: catalog } = useQuery({ queryKey: ['isbn', isbn], queryFn: () => lookupIsbn(isbn!), enabled: !!isbn });
+  const { data: catalog, error: catalogError } = useQuery({
+    queryKey: ['isbn', isbn],
+    queryFn: () => lookupIsbn(isbn!),
+    enabled: !!isbn,
+    // Retrying a throttled lookup straight away only extends the throttle.
+    retry: (n, e) => !isRateLimited(e) && n < 1,
+  });
+  const throttled = isRateLimited(catalogError) ? catalogError : null;
   const owned = mine.filter((r) => r.status === 'owned');
   const wished = mine.filter((r) => r.status === 'wishlist');
   // Catalog actions only for books not already owned; each action hides once it's done.
@@ -154,6 +162,12 @@ export default function SearchScreen() {
                 </Pressable>
               ))}
             </View>
+          </>
+        ) : null}
+        {isbn && throttled && showCatalog ? (
+          <>
+            <Section label="From the catalog" count={0} />
+            <Text style={{ marginHorizontal: 20, fontFamily: font.bold, fontSize: 13, color: c.soft }}>{rateLimitedMessage(throttled.retryAfterSec, false)}</Text>
           </>
         ) : null}
       </ScrollView>

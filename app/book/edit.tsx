@@ -7,7 +7,7 @@ import {
   addUserBook, findBookByIsbn, getBook, getBookEdit, getCatalogBook, removeBookCover, resetBookEdits,
   saveBookEdit, setBookCover, upsertBook,
 } from '@/db/repository';
-import { canSave, formFromBook, toEditPatch, yearError, type EditForm } from '@/features/bookEdits/editLogic';
+import { canSave, EDIT_LIMITS, formFromBook, toEditPatch, yearError, type EditForm } from '@/features/bookEdits/editLogic';
 import { invalidateLibrary } from '@/lib/invalidateLibrary';
 import { CoverSlot } from '@/components/bookEdits/CoverSlot';
 import { Button } from '@/components/ui/Button';
@@ -19,9 +19,9 @@ const BLANK: EditForm = { title: '', authors: '', subtitle: '', publisher: '', y
 /** Cover change staged until Save: a newly picked image, a removal, or nothing. */
 type CoverChange = { kind: 'none' } | { kind: 'pick'; uri: string } | { kind: 'remove' };
 
-function Field({ label, value, onChange, error, keyboardType, autoFocus }: {
+function Field({ label, value, onChange, error, keyboardType, autoFocus, maxLength }: {
   label: string; value: string; onChange: (v: string) => void; error?: string | null;
-  keyboardType?: 'default' | 'number-pad'; autoFocus?: boolean;
+  keyboardType?: 'default' | 'number-pad'; autoFocus?: boolean; maxLength?: number;
 }) {
   const { c } = useTheme();
   return (
@@ -32,6 +32,7 @@ function Field({ label, value, onChange, error, keyboardType, autoFocus }: {
         onChangeText={onChange}
         keyboardType={keyboardType}
         autoFocus={autoFocus}
+        maxLength={maxLength}
         accessibilityLabel={label}
         style={{
           marginTop: 6, minHeight: 46, paddingHorizontal: 12, borderWidth: 2, borderColor: error ? ink.tomato : c.line,
@@ -144,7 +145,7 @@ export default function EditBookScreen() {
           />
           {photoError ? <Text style={{ fontFamily: font.bold, fontSize: 13, color: ink.tomato, textAlign: 'center', marginTop: 8 }}>{photoError}</Text> : null}
 
-          <Field label="Title" value={form.title} onChange={set('title')} autoFocus={!form.title} />
+          <Field label="Title" value={form.title} onChange={set('title')} autoFocus={!form.title} maxLength={EDIT_LIMITS.text} />
           <Field label="Authors (separate with commas)" value={form.authors} onChange={set('authors')} />
 
           <Pressable onPress={() => setMore((m) => !m)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center', marginTop: 8 }}>
@@ -152,10 +153,10 @@ export default function EditBookScreen() {
           </Pressable>
           {showMore ? (
             <>
-              <Field label="Subtitle" value={form.subtitle} onChange={set('subtitle')} />
-              <Field label="Publisher" value={form.publisher} onChange={set('publisher')} />
+              <Field label="Subtitle" value={form.subtitle} onChange={set('subtitle')} maxLength={EDIT_LIMITS.text} />
+              <Field label="Publisher" value={form.publisher} onChange={set('publisher')} maxLength={EDIT_LIMITS.text} />
               <Field label="Year" value={form.year} onChange={set('year')} keyboardType="number-pad" error={yearError(form.year)} />
-              <Field label="Edition" value={form.edition} onChange={set('edition')} />
+              <Field label="Edition" value={form.edition} onChange={set('edition')} maxLength={EDIT_LIMITS.text} />
             </>
           ) : null}
 

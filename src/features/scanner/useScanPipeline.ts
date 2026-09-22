@@ -8,7 +8,7 @@ import { useCallback, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { normalizeToIsbn13 } from '@/lib/isbn';
 import { checkOwnership, upsertBook } from '@/db/repository';
-import { lookupIsbn, type BookMeta } from '@/api/bookLookup';
+import { isRateLimited, lookupIsbn, type BookMeta } from '@/api/bookLookup';
 import type { OwnershipVerdict } from '@/lib/types';
 
 const COOLDOWN_MS = 2500;
@@ -18,6 +18,8 @@ export interface ScanResult {
   verdict: OwnershipVerdict;
   meta: BookMeta | null; // filled async for unknown books
   metaLoading: boolean;
+  /** Set when the lookup service is throttling us: a temporary failure, not "not found". */
+  rateLimitedFor?: number; // seconds until a retry is worthwhile
 }
 
 export function useScanPipeline() {
@@ -56,8 +58,16 @@ export function useScanPipeline() {
             c?.isbn13 === isbn13 ? { ...c, meta, metaLoading: false, verdict: recheck } : c
           );
         })
-        // A failed cache write must not leave the verdict spinning; it falls back to "add details".
-        .catch(settle);
+        .catch((e) => {
+          if (isRateLimited(e)) {
+            // Throttled: say so instead of "not found". The normal cooldown still applies, so a
+            // code held in frame doesn't hammer the service; a later rescan retries.
+            setCurrent((c) => (c?.isbn13 === isbn13 ? { ...c, metaLoading: false, rateLimitedFor: e.retryAfterSec } : c));
+            return;
+          }
+          // A failed cache write must not leave the verdict spinning; it falls back to "add details".
+          settle();
+        });
     }
   }, []);
 

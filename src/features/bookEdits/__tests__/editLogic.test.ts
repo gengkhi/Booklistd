@@ -1,6 +1,6 @@
 import type { Book } from '@/lib/types';
 import {
-  applyEdits, canSave, EMPTY_PATCH, formFromBook, isEmptyPatch, needsDetails, toEditPatch, yearError,
+  applyEdits, canSave, EDIT_LIMITS, EMPTY_PATCH, formFromBook, isEmptyPatch, needsDetails, toEditPatch, yearError,
 } from '../editLogic';
 
 const catalog: Book = {
@@ -37,6 +37,18 @@ describe('toEditPatch', () => {
   });
   it('never overrides the title with blank', () => {
     expect(toEditPatch(form({ title: '   ' }), catalog).title).toBeNull();
+  });
+  it('keeps at most 20 authors, each within the text cap, matching the server (S3)', () => {
+    const many = Array.from({ length: 25 }, (_, i) => `Author ${i + 1}`).join(', ');
+    const authors = toEditPatch(form({ authors: many }), catalog).authors!;
+    expect(EDIT_LIMITS).toEqual({ text: 300, authors: 20 });
+    expect(authors).toHaveLength(20);
+    expect(authors[19]).toBe('Author 20');
+    expect(toEditPatch(form({ authors: 'x'.repeat(400) }), catalog).authors).toEqual(['x'.repeat(300)]);
+  });
+  it('caps text fields at 300 characters (S3)', () => {
+    const p = toEditPatch(form({ title: 't'.repeat(350), subtitle: 's'.repeat(301), publisher: 'p'.repeat(400), edition: 'e'.repeat(999) }), catalog);
+    expect([p.title, p.subtitle, p.publisher, p.edition].map((v) => v!.length)).toEqual([300, 300, 300, 300]);
   });
   it('parses the year, and ignores it when invalid', () => {
     expect(toEditPatch(form({ year: '2009' }), catalog).publishedYear).toBe(2009);

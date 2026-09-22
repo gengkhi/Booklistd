@@ -1,4 +1,6 @@
-/** UUID-ish, good enough locally; the server keeps it as-is on sync. */
+import * as Crypto from 'expo-crypto';
+
+/** RFC 4122 v4 UUID from the platform CSPRNG (F9). Server id columns for user-owned tables are text, so older ids stay valid. */
 export function newId(): string {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return Crypto.randomUUID();
 }

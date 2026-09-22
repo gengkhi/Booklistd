@@ -28,7 +28,7 @@ export function CurrentlyReadingStrip({ rows, today, onOpen, onSeeAll, onPickFro
           {rows.map((r) => (
             <Pressable key={r.id} onPress={() => onOpen(r.bookId)} accessibilityRole="button"
               accessibilityLabel={`${r.book.title}${r.startedAt ? `, day ${dayNumber(r.startedAt, today)}` : ''}`} style={{ width: 84 }}>
-              <CoverArt id={r.bookId} title={r.book.title} coverUrl={r.book.coverUrl} width={84} height={124} />
+              <CoverArt id={r.bookId} title={r.book.title} coverUrl={r.book.coverUrl} bookId={r.bookId} coverPending={r.book.coverPending} coverObject={r.book.coverObject} width={84} height={124} />
               <Text numberOfLines={1} style={{ fontFamily: font.heavy, fontSize: 12, color: c.text, marginTop: 6 }}>{r.book.title}</Text>
               {r.startedAt ? <Text style={{ fontFamily: font.bold, fontSize: 11.5, color: c.soft }}>{`Day ${dayNumber(r.startedAt, today)}`}</Text> : null}
             </Pressable>

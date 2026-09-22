@@ -1,16 +1,18 @@
 /**
  * Repository — every screen talks to this, never to SQLite directly.
- * Writes also enqueue a pending_op so a future sync engine (Phase 3) can push them oldest-first.
- * Phase 3 notes: readings are backfilled on server and device with different ids — push them with
- * onConflict 'user_id,book_id'; shelves likewise — match on (user_id, lower(trim(name))) so they don't duplicate.
+ * Writes also enqueue a pending_op (src/db/pendingOps.ts) that the sync engine (src/sync) pushes oldest-first.
  */
 import { getDb, newId } from './database';
+import { deleteMeta } from './localData';
+import { enqueueOp } from './pendingOps';
+import { discardedCoverKey } from '@/sync/logic';
 import type { Book, BookStatus, LibraryRow, OwnershipVerdict, Plank, Reading, ReadingRow, ReadingState, ShelfRow, UserBook } from '@/lib/types';
 import { isEmptyPatch, type BookEditPatch, type BookEditRow } from '@/features/bookEdits/editLogic';
 import { deleteCoverFile, documentUri, resolveCoverUri, saveCoverFile } from '@/features/bookEdits/coverFiles';
+import type { ExportRow } from '@/features/export/libraryCsv';
 import { isValidRating } from '@/features/rating/reactions';
 import { applyReadingState, canRate, clampDates, todayIso, type ReadingFields } from '@/features/reading/readingLogic';
-import { isPlank, nextPlank, normaliseName } from '@/features/shelves/shelfRules';
+import { cleanShelfName, isPlank, nextPlank, normaliseName } from '@/features/shelves/shelfRules';
 
 // ---------- mappers ----------
 // toBook runs once per row, and a big library has thousands of rows — cache the documents URI.
@@ -29,7 +31,10 @@ const toBook = (r: any): Book => ({
   edition: r.edition,
   genres: JSON.parse(r.genres ?? '[]'),
   pageCount: r.page_count,
-  coverUrl: resolveCoverUri(r.cover_path ?? null, docs()) ?? r.cover_url,
+  // A synced photo that isn't downloaded yet shows the painted cover, not the catalog one (spec §6.7).
+  coverUrl: resolveCoverUri(r.cover_path ?? null, docs()) ?? (r.cover_object ? null : r.cover_url),
+  coverPending: !r.cover_path && !!r.cover_object,
+  coverObject: r.cover_object ?? undefined,
   description: r.description,
   workKey: r.work_key,
   source: r.source,
@@ -55,12 +60,7 @@ const toUserBook = (r: any): UserBook => ({
   deletedAt: r.deleted_at,
 });
 
-function enqueue(table: string, rowId: string, op: 'upsert' | 'delete', payload: unknown) {
-  getDb().runSync(
-    'INSERT INTO pending_ops (table_name, row_id, op, payload) VALUES (?, ?, ?, ?)',
-    [table, rowId, op, JSON.stringify(payload)]
-  );
-}
+const enqueue = enqueueOp;
 
 /** A stale/unknown/legacy-room-name id is treated as Unshelved rather than tripping the shelf_id FK. */
 const liveShelfId = (id: string | null | undefined): string | null =>
@@ -160,12 +160,40 @@ export function getBookEdit(bookId: string): BookEditRow | null {
   return r ? toEditRow(r) : null;
 }
 
+/**
+ * A new, removed or reset photo supersedes one the bucket refused (sync_rejects 'covers', src/sync/covers.ts)
+ * or one the person discarded (sync_meta 'discard:covers:…', src/sync/rejects.ts Task 17).
+ */
+function clearCoverReject(bookId: string) {
+  getDb().runSync("DELETE FROM sync_rejects WHERE table_name = 'covers' AND row_id = ?", [bookId]);
+  deleteMeta(discardedCoverKey(bookId));
+}
+
+/** Queues the current book_edits row as an upsert snapshot. */
+function enqueueBookEdit(bookId: string) {
+  enqueue('book_edits', bookId, 'upsert', getDb().getFirstSync<any>('SELECT * FROM book_edits WHERE book_id = ?', [bookId]));
+}
+
+/**
+ * Hard-deletes the local book_edits row and queues a tombstone (the server soft-deletes). The tombstone
+ * carries the row's synced cover_object so the server keeps the photo of a row that can still be restored;
+ * only removing the photo itself passes keepCover = false. No row, nothing to queue.
+ */
+function deleteBookEdit(bookId: string, keepCover = true) {
+  const d = getDb();
+  const row = d.getFirstSync<{ cover_object: string | null }>('SELECT cover_object FROM book_edits WHERE book_id = ?', [bookId]);
+  if (!row) return;
+  d.runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
+  const deletedAt = d.getFirstSync<{ n: string }>("SELECT datetime('now') AS n")!.n;
+  enqueue('book_edits', bookId, 'delete', { book_id: bookId, cover_object: keepCover ? row.cover_object : null, deleted_at: deletedAt });
+}
+
 /** Replace the text overrides. Any save makes the edit a pending contribution again. */
 export function saveBookEdit(bookId: string, patch: BookEditPatch): void {
   const d = getDb();
   const existing = getBookEdit(bookId);
   if (isEmptyPatch(patch) && !existing?.coverPath) {
-    d.runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
+    deleteBookEdit(bookId);
     return;
   }
   d.runSync(
@@ -180,6 +208,7 @@ export function saveBookEdit(bookId: string, patch: BookEditPatch): void {
       patch.publisher, patch.publishedYear, patch.edition, existing?.coverPath ?? null,
     ]
   );
+  enqueueBookEdit(bookId);
 }
 
 /** Copies the photo first; the row is only written once the file exists. */
@@ -187,26 +216,32 @@ export async function setBookCover(bookId: string, sourceUri: string): Promise<v
   const previous = getBookEdit(bookId)?.coverPath ?? null;
   const rel = await saveCoverFile(bookId, sourceUri);
   getDb().runSync(
-    `INSERT INTO book_edits (book_id, cover_path, updated_at, contributed_at) VALUES (?, ?, datetime('now'), NULL)
-     ON CONFLICT(book_id) DO UPDATE SET cover_path=excluded.cover_path, updated_at=datetime('now'), contributed_at=NULL`,
+    `INSERT INTO book_edits (book_id, cover_path, cover_object, updated_at, contributed_at) VALUES (?, ?, NULL, datetime('now'), NULL)
+     ON CONFLICT(book_id) DO UPDATE SET cover_path=excluded.cover_path, cover_object=NULL, updated_at=datetime('now'), contributed_at=NULL`,
     [bookId, rel]
   );
+  enqueueBookEdit(bookId);
+  clearCoverReject(bookId);
   if (previous && previous !== rel) deleteCoverFile(previous);
 }
 
 export function removeBookCover(bookId: string): void {
   const edit = getBookEdit(bookId);
   if (!edit?.coverPath) return;
-  const d = getDb();
   const { coverPath, ...text } = edit;
-  if (isEmptyPatch(text)) d.runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
-  else d.runSync(`UPDATE book_edits SET cover_path = NULL, updated_at = datetime('now'), contributed_at = NULL WHERE book_id = ?`, [bookId]);
+  if (isEmptyPatch(text)) deleteBookEdit(bookId, false);
+  else {
+    getDb().runSync(`UPDATE book_edits SET cover_path = NULL, cover_object = NULL, updated_at = datetime('now'), contributed_at = NULL WHERE book_id = ?`, [bookId]);
+    enqueueBookEdit(bookId);
+  }
+  clearCoverReject(bookId);
   deleteCoverFile(coverPath);
 }
 
 export function resetBookEdits(bookId: string): void {
   const coverPath = getBookEdit(bookId)?.coverPath ?? null;
-  getDb().runSync('DELETE FROM book_edits WHERE book_id = ?', [bookId]);
+  deleteBookEdit(bookId);
+  clearCoverReject(bookId);
   deleteCoverFile(coverPath);
 }
 
@@ -237,7 +272,7 @@ export function addUserBook(bookId: string, status: BookStatus, shelfId?: string
 }
 
 const LIBRARY_SELECT = `SELECT ub.*, s.name AS shelf_name, b.id as b_id, b.isbn13, b.isbn10, b.title, b.subtitle, b.authors, b.publisher,
-       b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.cover_path, b.description, b.work_key,
+       b.published_year, b.edition, b.genres, b.page_count, b.cover_url, b.cover_path, b.cover_object, b.description, b.work_key,
        b.source, b.edited
   FROM user_books ub
   JOIN books_effective b ON b.id = ub.book_id
@@ -430,7 +465,7 @@ export function listReadings(state: ReadingState): ReadingRow[] {
   return getDb()
     .getAllSync<any>(
       `SELECT r.*, b.id AS b_id, b.isbn13, b.isbn10, b.title, b.subtitle, b.authors, b.publisher, b.published_year,
-              b.edition, b.genres, b.page_count, b.cover_url, b.cover_path, b.description, b.work_key, b.source, b.edited,
+              b.edition, b.genres, b.page_count, b.cover_url, b.cover_path, b.cover_object, b.description, b.work_key, b.source, b.edited,
               CASE
                 WHEN EXISTS (SELECT 1 FROM user_books ub WHERE ub.book_id = r.book_id AND ub.deleted_at IS NULL AND ub.status != 'wishlist') THEN 'owned'
                 WHEN EXISTS (SELECT 1 FROM user_books ub WHERE ub.book_id = r.book_id AND ub.deleted_at IS NULL AND ub.status = 'wishlist') THEN 'wishlist'
@@ -503,7 +538,7 @@ export function listShelves(): ShelfRow[] {
 
 /** New shelf at the end with the next plank; an existing name (any case) returns that shelf instead. */
 export function createShelf(name: string): ShelfRow {
-  const clean = name.trim();
+  const clean = cleanShelfName(name);
   if (!clean) throw new Error('Give the shelf a name.');
   const shelves = listShelves();
   const existing = shelves.find((s) => normaliseName(s.name) === normaliseName(clean));
@@ -517,7 +552,7 @@ export function createShelf(name: string): ShelfRow {
 }
 
 export function renameShelf(id: string, name: string): void {
-  const clean = name.trim();
+  const clean = cleanShelfName(name);
   if (!clean) throw new Error('Give the shelf a name.');
   const shelves = listShelves();
   if (!shelves.some((s) => s.id === id)) throw new Error('That shelf no longer exists.');
@@ -600,4 +635,40 @@ export function restoreCopy(copyId: string, reopenLoanId: string | null): void {
       enqueue('loans', reopenLoanId, 'upsert', d.getFirstSync<any>('SELECT * FROM loans WHERE id = ?', [reopenLoanId]));
     }
   });
+}
+
+// ---------- export ----------
+/** Every live copy (wishlist included) with its shelf, reading and open loan, then books that only have a reading. */
+export function listExportRows(): ExportRow[] {
+  return getDb()
+    .getAllSync<any>(
+      `SELECT b.title, b.authors, b.isbn13, ub.status, s.name AS shelf, r.state, r.started_at, r.finished_at, r.rating,
+              l.borrower_name, l.loaned_at
+         FROM user_books ub
+         JOIN books_effective b ON b.id = ub.book_id
+         LEFT JOIN shelves s ON s.id = ub.shelf_id AND s.deleted_at IS NULL
+         LEFT JOIN readings r ON r.book_id = ub.book_id AND r.deleted_at IS NULL
+         LEFT JOIN loans l ON l.user_book_id = ub.id AND l.returned_at IS NULL AND l.deleted_at IS NULL
+        WHERE ub.deleted_at IS NULL
+       UNION ALL
+       SELECT b.title, b.authors, b.isbn13, NULL, NULL, r.state, r.started_at, r.finished_at, r.rating, NULL, NULL
+         FROM readings r
+         JOIN books_effective b ON b.id = r.book_id
+        WHERE r.deleted_at IS NULL
+          AND NOT EXISTS (SELECT 1 FROM user_books ub WHERE ub.book_id = r.book_id AND ub.deleted_at IS NULL)
+       ORDER BY 1 COLLATE NOCASE`
+    )
+    .map((r) => ({
+      title: r.title,
+      authors: JSON.parse(r.authors ?? '[]'),
+      isbn13: r.isbn13 ?? null,
+      status: r.status ?? null,
+      shelf: r.shelf ?? null,
+      readingState: r.state ?? null,
+      startedAt: r.started_at ?? null,
+      finishedAt: r.finished_at ?? null,
+      rating: r.rating ?? null,
+      loanedTo: r.borrower_name ?? null,
+      loanedSince: r.loaned_at ?? null,
+    }));
 }

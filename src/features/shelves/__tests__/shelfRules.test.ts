@@ -1,6 +1,6 @@
 import type { ShelfRow } from '@/lib/types';
 import { row } from '@/test/fixtures';
-import { groupByShelf, isPlank, migrateLocations, mostCopied, nextPlank, normaliseName, UNSHELVED } from '../shelfRules';
+import { cleanShelfName, groupByShelf, isPlank, MAX_SHELF_NAME, migrateLocations, mostCopied, nextPlank, normaliseName, UNSHELVED } from '../shelfRules';
 
 const shelf = (id: string, name: string, sortOrder: number, plank: ShelfRow['plank'] = 'bus'): ShelfRow =>
   ({ id, name, plank, sortOrder, bookCount: 0 });
@@ -75,5 +75,21 @@ describe('mostCopied', () => {
   });
   it('is null when nothing is duplicated', () => {
     expect(mostCopied([row(), row()])).toBeNull();
+  });
+});
+
+describe('cleanShelfName', () => {
+  it('trims and keeps names within the server cap of 80 characters', () => {
+    expect(MAX_SHELF_NAME).toBe(80);
+    expect(cleanShelfName('  Study  ')).toBe('Study');
+    expect(cleanShelfName('x'.repeat(95))).toBe('x'.repeat(80));
+  });
+  it('counts characters, not UTF-16 units, and never splits one', () => {
+    const name = cleanShelfName('📚'.repeat(90));
+    expect(Array.from(name)).toHaveLength(80);
+    expect(name).toBe('📚'.repeat(80));
+  });
+  it('drops spaces left at the cut', () => {
+    expect(cleanShelfName(`${'a'.repeat(79)} more`)).toBe('a'.repeat(79));
   });
 });
